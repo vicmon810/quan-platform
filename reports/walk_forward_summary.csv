@@ -1,0 +1,4 @@
+phase,ticker,strategy,fast,slow,start_year,end_year,sharpe,max_drawdown,annual_return,final_value
+train,SPY,ma_cross,5.0,40.0,2020,2023,0.5645769642167486,14.826668044649104,6.8266157177116735,
+test,SPY,ma_cross,5.0,40.0,2023,2025,65.88344690024155,6.417222742330265,16.2013742463855,134866.7769205902
+benchmark,SPY,buy_and_hold,,,2023,2025,,0.0,0.0,100000.0

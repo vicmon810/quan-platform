@@ -21,6 +21,11 @@ class MovingAverageCross(bt.Strategy):
         else:
             if self.cross < 0:
                 self.sell()
+    
+class BuyAndHold(bt.Strategy):
+    def next(self):
+        if not self.position:
+            self.buy
 
 
 def run_one_ticker(ticker, start_year, end_year):
@@ -147,10 +152,17 @@ def walk_forward_validation():
         start_year=2023, 
         end_year=2025,
     )
+
+    benchmark_result = run_buy_and_hold(
+        ticker=ticker,
+        start_year=2023,
+        end_year=2025
+    )
    
     df = pd.DataFrame([
         {
             "phase":"train",
+            "startegy": "ma_cross",
             **best_train,
             "start_year":2020,
             "end_year":2023,
@@ -158,13 +170,14 @@ def walk_forward_validation():
         {
             "phase":"test",
             **test_result,
-        }
+        },
+        benchmark_result,
     ])
 
     Path("reports").mkdir(exist_ok=True)
-    df.to_csv("reports/walk_forward_spy.csv", index=False)
+    df.to_csv("reports/walk_forward_spy_with_benchmark.csv", index=False)
     print(df)
-    print("\nSaved to reports/walk_forward_spy.csv")
+    print("\nSaved to reports/walk_forward_spy_with_benchmark.csv")
 
 def run_single_strategy(ticker, fast, slow, start_year, end_year):
     cerebro = bt.Cerebro()
@@ -192,7 +205,7 @@ def run_single_strategy(ticker, fast, slow, start_year, end_year):
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
     cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
-    
+
     cerebro.broker.setcash(100_000)
     cerebro.broker.setcommission(commission=0.001)
 
@@ -213,6 +226,47 @@ def run_single_strategy(ticker, fast, slow, start_year, end_year):
         "trade":  strat.analyzers.trades.get_analysis(),
     }
 
+
+def run_buy_and_hold(ticker, start_year, end_year):
+    cerebro = bt.Cerebro()
+
+    data_path = Path(f"data/raw/{ticker}.csv")
+
+    data = bt.feeds.YahooFinanceCSVData(
+        dataname=str(data_path),
+        fromdate=datetime(start_year, 1, 1),
+        todate=datetime(end_year, 1, 1),
+        reverse=False,
+    )
+
+    cerebro.adddata(data)
+    cerebro.addstrategy(BuyAndHold)
+
+    cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
+
+    cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
+    cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
+    cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
+
+    cerebro.broker.setcash(100_000)
+    cerebro.broker.setcommission(commission=0.001)
+
+    results = cerebro.run(maxcpus=1)
+    strat = results[0]
+
+    return {
+        "phase": "benchmark",
+        "strategy": "buy_and_hold",
+        "ticker": ticker,
+        "fast": None,
+        "slow": None,
+        "start_year": start_year,
+        "end_year": end_year,
+        "final_value": cerebro.broker.getvalue(),
+        "max_drawdown": strat.analyzers.drawdown.get_analysis()["max"]["drawdown"],
+        "annual_return": strat.analyzers.returns.get_analysis().get("rnorm100"),
+        "trade": strat.analyzers.trades.get_analysis(),
+    }
 
 if __name__ == "__main__":
     # run_all()
