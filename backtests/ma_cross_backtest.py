@@ -1,3 +1,4 @@
+from datetime import datetime
 import backtrader as bt
 from pathlib import Path
 import pandas as pd
@@ -22,15 +23,16 @@ class MovingAverageCross(bt.Strategy):
                 self.sell()
 
 
-def run_one_ticker(ticker):
+def run_one_ticker(ticker, start_year, end_year):
     cerebro = bt.Cerebro()
 
  
     data_path = Path(f"data/raw/{ticker}.csv")
 
     data = bt.feeds.YahooFinanceCSVData(
-        dataname=str(data_path),
-        reverse=False,
+        dataname=str(data_path),    
+        fromdate = datetime(start_year,1,1),
+        todate = datetime(end_year,1,1),   
     )
 
     cerebro.adddata(data)
@@ -47,8 +49,8 @@ def run_one_ticker(ticker):
     cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, _name="sharpe")
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
     cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
+    # cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
-
     cerebro.broker.setcash(100_000)
     cerebro.broker.setcommission(commission=0.001)
 
@@ -110,7 +112,7 @@ def run_all():
     for ticker in tickers:
         print(f"Running {ticker}....")
         # all_rows.extend(run_one_ticker(ticker))
-        all_rows.extend(run_one_ticker(ticker))
+        all_rows.extend(run_one_ticker(ticker, 2020,2025))
 
 
     df = pd.DataFrame(all_rows)
@@ -130,5 +132,88 @@ def run_all():
     print("\nSaved to reports/all_optimization_results.csv")
     
 
+def walk_forward_validation():
+    ticker = "SPY"
+    
+    train_results = run_one_ticker(ticker=ticker, 
+                                   start_year=2020,
+                                   end_year=2023)
+    best_train = train_results[0]
+    
+    test_result = run_single_strategy(
+        ticker=ticker,
+        fast=best_train["fast"],
+        slow=best_train["slow"],
+        start_year=2023, 
+        end_year=2025,
+    )
+   
+    df = pd.DataFrame([
+        {
+            "phase":"train",
+            **best_train,
+            "start_year":2020,
+            "end_year":2023,
+        },
+        {
+            "phase":"test",
+            **test_result,
+        }
+    ])
+
+    Path("reports").mkdir(exist_ok=True)
+    df.to_csv("reports/walk_forward_spy.csv", index=False)
+    print(df)
+    print("\nSaved to reports/walk_forward_spy.csv")
+
+def run_single_strategy(ticker, fast, slow, start_year, end_year):
+    cerebro = bt.Cerebro()
+
+    data_path = Path(f"data/raw/{ticker}.csv")
+
+    data = bt.feeds.YahooFinanceCSVData(
+        dataname=str(data_path),
+        fromdate=datetime(start_year, 1, 1),
+        todate=datetime(end_year, 1, 1),
+        reverse=False,
+    )
+
+    cerebro.adddata(data)
+
+    cerebro.addstrategy(
+        MovingAverageCross,
+        fast=fast,
+        slow=slow,
+    )
+
+    cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
+
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, _name="sharpe")
+    cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
+    cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
+    cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
+    
+    cerebro.broker.setcash(100_000)
+    cerebro.broker.setcommission(commission=0.001)
+
+    results = cerebro.run(maxcpus=1)
+    strat = results[0]
+    
+    
+    return {
+        "ticker": ticker,
+        "fast": fast,
+        "slow": slow,
+        "start_year": start_year,
+        "end_year": end_year,
+        "final_value": cerebro.broker.getvalue(),
+        "sharpe": strat.analyzers.sharpe.get_analysis().get("sharperatio"),
+        "max_drawdown": strat.analyzers.drawdown.get_analysis()["max"]["drawdown"],
+        "annual_return": strat.analyzers.returns.get_analysis().get("rnorm100"),
+        "trade":  strat.analyzers.trades.get_analysis(),
+    }
+
+
 if __name__ == "__main__":
-    run_all()
+    # run_all()
+    walk_forward_validation()
