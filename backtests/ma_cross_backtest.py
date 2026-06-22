@@ -22,11 +22,11 @@ class MovingAverageCross(bt.Strategy):
                 self.sell()
 
 
-def run_backtest():
+def run_one_ticker(ticker):
     cerebro = bt.Cerebro()
 
  
-    data_path = Path("data/raw/SPY.csv")
+    data_path = Path(f"data/raw/{ticker}.csv")
 
     data = bt.feeds.YahooFinanceCSVData(
         dataname=str(data_path),
@@ -65,6 +65,7 @@ def run_backtest():
     for result in results:
         strat = result[0]
         rows.append({
+            "ticker": ticker,
             "fast": strat.params.fast,
             "slow": strat.params.slow,
             "sharpe": strat.analyzers.sharpe.get_analysis().get("sharperatio"),
@@ -77,18 +78,18 @@ def run_backtest():
         key=lambda x: x["sharpe"] if x["sharpe"] is not None else -999,
         reverse=True,
     )
+    return rows
+    # reports_dir = Path("reports")
+    # reports_dir.mkdir(exist_ok=True)
 
-    reports_dir = Path("reports")
-    reports_dir.mkdir(exist_ok=True)
+    # df_results = pd.DataFrame(rows)
 
-    df_results = pd.DataFrame(rows)
+    # top_10 = df_results.head(10)
 
-    top_10 = df_results.head(10)
+    # top_10_path = reports_dir/"top_10_param.csv"
+    # top_10.to_csv(top_10_path, index=False)
 
-    top_10_path = reports_dir/"top_10_param.csv"
-    top_10.to_csv(top_10_path, index=False)
-
-    print(f"\nParameter set saved to {top_10_path}")
+    # print(f"\nParameter set saved to {top_10_path}")
 
     # print(f"Final portfolio value: {cerebro.broker.getvalue():.2f}\n")
     # print(f"\nSharpe Ratio: {strat.analyzers.sharpe.get_analysis()}\n")
@@ -102,5 +103,32 @@ def run_backtest():
     # df.to_csv(RAW_DIR/f"{ticker}.csv", index=False)
 
 
+def run_all():
+    tickers = ["SPY", "QQQ", "AAPL", "MSFT"]
+    all_rows = []
+
+    for ticker in tickers:
+        print(f"Running {ticker}....")
+        # all_rows.extend(run_one_ticker(ticker))
+        all_rows.extend(run_one_ticker(ticker))
+
+
+    df = pd.DataFrame(all_rows)
+
+    df = df.sort_values(
+        "sharpe",
+        ascending=False,
+        na_position="last"
+    )
+
+    Path("reports").mkdir(exist_ok=True)
+
+    df.to_csv("reports/all_opt_results.csv", index=False)
+    df.head(10).to_csv("reports/top_10_all_tickers.csv", index=False)
+    print("\nTop 10:")
+    print(df.head(10))
+    print("\nSaved to reports/all_optimization_results.csv")
+    
+
 if __name__ == "__main__":
-    run_backtest()
+    run_all()
