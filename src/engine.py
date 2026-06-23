@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from collections import defaultdict
 
 import backtrader as bt
 
@@ -69,6 +70,22 @@ def run_single_ma(ticker, fast, slow, start_year, end_year, cash=100_000):
         final_value=cerebro.broker.getvalue(),
     )
 
+def run_multipl_ma(tickers, fast, slow, start_year, end_year, cash=100_000):
+    # print("her")
+    results = [] 
+    for ticker in tickers:
+        results.append(run_single_ma(
+            ticker=ticker,
+            fast=fast,
+            slow=slow,
+            start_year=start_year,
+            end_year=end_year,
+            cash=cash
+        )   )
+
+    return results
+    
+
 
 def run_buy_and_hold(ticker, start_year, end_year, cash=100_000):
     cerebro = bt.Cerebro()
@@ -96,6 +113,19 @@ def run_buy_and_hold(ticker, start_year, end_year, cash=100_000):
         final_value=cerebro.broker.getvalue(),
     )
 
+
+def multiple_buy_and_hold(tickers, start_year, end_year, cash=100_000):
+    results = []
+    for ticker in tickers:
+        results.append(
+            run_buy_and_hold(
+                ticker, 
+                start_year,
+                end_year,
+                cash
+            )
+        )
+    return results
 
 def optimize_ma(ticker, start_year, end_year, cash=100_000):
     cerebro = bt.Cerebro()
@@ -139,3 +169,30 @@ def optimize_ma(ticker, start_year, end_year, cash=100_000):
     )
 
     return rows
+def multiple_opt_ma(tickers, start_year, end_year, cash=100_000):
+    results = []
+    for ticker in tickers:
+        results.append(
+            optimize_ma(
+                ticker=ticker,
+                start_year=start_year,
+                end_year=end_year,
+                cash=cash
+            )
+        )
+
+    all_results = [item for sublist in results for item in sublist]
+    param_scores = defaultdict(list)
+    for r in all_results:
+        if r["sharpe"] is not None: 
+            key = (r["fast"], r["slow"])
+            param_scores[key].append(r["sharpe"])
+
+    best_key = max(
+        param_scores,
+        # key=lambda k :sum(param_scores[k]/ len(param_scores[k]))
+        key=lambda k: sum(param_scores[k])/len(param_scores[k])
+    )
+    best = {"fast": best_key[0], "slow": best_key[1]}
+    print(f"testing best {type(best)}")
+    return best

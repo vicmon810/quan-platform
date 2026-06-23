@@ -7,16 +7,18 @@ import matplotlib.pyplot as plt
 def plot_equity_curves(results, output_path):
     plt.figure(figsize=(12, 6))
 
-    for result in results:
-        df = pd.DataFrame(result["portfolio_values"])
-        df["date"] = pd.to_datetime(df["date"])
+    for result_list in results:
+        # result_list 是 [{"ticker": "SPY", ...}, {"ticker": "QQQ", ...}]
+        for result in result_list:
+            df = pd.DataFrame(result["portfolio_values"])
+            df["date"] = pd.to_datetime(df["date"])
 
-        label = result["strategy"]
+            if result["strategy"] == "ma_cross":
+                label = f"{result['ticker']} MA({result['fast']}, {result['slow']})"
+            else:
+                label = f"{result['ticker']} Buy&Hold"
 
-        if result["strategy"] == "ma_cross":
-            label = f"MA({result['fast']}, {result['slow']})"
-
-        plt.plot(df["date"], df["value"], label=label)
+            plt.plot(df["date"], df["value"], label=label)
 
     plt.title("Strategy vs Buy & Hold")
     plt.xlabel("Date")

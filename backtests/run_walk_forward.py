@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.engine import optimize_ma, run_single_ma, run_buy_and_hold
+from src.engine import optimize_ma, run_single_ma, run_buy_and_hold, run_multipl_ma, multiple_opt_ma, multiple_buy_and_hold
 from src.plotting import plot_equity_curves
 
 
@@ -14,8 +14,8 @@ def remove_large_objects(row):
 
 
 def main():
-    ticker = "SPY"
-
+    # ticker = [[]]
+    tickers = ["SPY", "QQQ", "AAPL", "MSFT"]
     train_start = 2020
     train_end = 2023
 
@@ -23,15 +23,20 @@ def main():
     test_end = 2025
 
     print("Optimizing on training period...")
-    train_results = optimize_ma(ticker, train_start, train_end)
-    best = train_results[0]
+    train_results = multiple_opt_ma(tickers=tickers, start_year=train_start, end_year=train_end) 
+    #optimize_ma(tickers, train_start, train_end)
+    # print("===")
+    # print(type(train_results))
+    # print(train_results[0]["ticker"])
+    # print("===")
+    best = train_results
 
     print("Best train parameter:")
-    print(best)
+    print(type(best))
 
     print("Testing MA strategy...")
-    ma_test = run_single_ma(
-        ticker=ticker,
+    ma_test = run_multipl_ma (  #run_single_ma
+        tickers=tickers,
         fast=best["fast"],
         slow=best["slow"],
         start_year=test_start,
@@ -39,26 +44,20 @@ def main():
     )
 
     print("Running benchmark...")
-    benchmark = run_buy_and_hold(
-        ticker=ticker,
+    benchmark = multiple_buy_and_hold(#run_buy_and_hold(
+        tickers=tickers,
         start_year=test_start,
         end_year=test_end,
     )
 
-    report_rows = [
-        {
-            "phase": "train",
-            **best,
-        },
-        {
-            "phase": "test",
-            **remove_large_objects(ma_test),
-        },
-        {
-            "phase": "benchmark",
-            **remove_large_objects(benchmark),
-        },
-    ]
+    report_rows = [    ]
+    for r in ma_test:
+        report_rows.append({"phase": "test", **remove_large_objects(r)})
+    for r in benchmark:
+        report_rows.append({"phase": "benchmark", **remove_large_objects(r)})
+
+    # report_rows.append({"phase", "benchmark", **best})
+    report_rows.append({"phase": "train", **best})
 
     reports_dir = Path("reports")
     reports_dir.mkdir(exist_ok=True)
