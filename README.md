@@ -14,7 +14,7 @@ A python based algorithmic trading backtest framework with walk-forward optimiza
 
 ## Strategies 
 
-|--|--|
+|--|--|--|
 |**Strategy**|Description|
 |MA Cross| Moving average crossover(fast/slow configurable)|
 |Buy & Hold| Benchmark strategy|
