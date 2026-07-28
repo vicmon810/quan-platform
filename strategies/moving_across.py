@@ -19,8 +19,3 @@ class MovingAverageCross(bt.Strategy):
             if self.cross < 0:
                 self.sell()
     
-class BuyAndHold(bt.Strategy):
-    def next(self):
-        if not self.position:
-            self.order_target_percent(target=0.95)
-            self.buy

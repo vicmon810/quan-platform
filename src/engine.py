@@ -4,7 +4,9 @@ from collections import defaultdict
 
 import backtrader as bt
 
-from src.strategies import MovingAverageCross, BuyAndHold
+from strategies.moving_across import MovingAverageCross 
+from strategies.buy_n_hold import BuyAndHold
+from strategies.cross_momentum import CrossSectionalMomentum
 from src.analyzers import PortfolioValueAnalyzer
 
 
@@ -27,15 +29,15 @@ def make_data_feed(ticker, start_year, end_year):
     )
 
 
-def extract_result(strat, ticker, strategy_name, fast, slow, start_year, end_year, final_value):
+def extract_result(strat, ticker, strategy_name, 
+                 start_year, end_year, final_value, **strategy_params):
     return {
         "ticker": ticker,
         "strategy": strategy_name,
-        "fast": fast,
-        "slow": slow,
         "start_year": start_year,
         "end_year": end_year,
         "final_value": final_value,
+        **strategy_params,
         "sharpe": strat.analyzers.sharpe.get_analysis().get("sharperatio"),
         "max_drawdown": strat.analyzers.drawdown.get_analysis()["max"]["drawdown"],
         "annual_return": strat.analyzers.returns.get_analysis().get("rnorm100"),
@@ -44,11 +46,11 @@ def extract_result(strat, ticker, strategy_name, fast, slow, start_year, end_yea
     }
 
 
-def run_single_ma(ticker, fast, slow, start_year, end_year, cash=100_000):
+def run_single(ticker, strategy_cls, strategy_param, start_year, end_year, cash=100_000):
     cerebro = bt.Cerebro()
     cerebro.adddata(make_data_feed(ticker, start_year, end_year))
 
-    cerebro.addstrategy(MovingAverageCross, fast=fast, slow=slow)
+    cerebro.addstrategy(strategy=strategy_cls, **strategy_param)
     cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
 
     add_standard_analyzers(cerebro)
@@ -62,29 +64,27 @@ def run_single_ma(ticker, fast, slow, start_year, end_year, cash=100_000):
     return extract_result(
         strat=strat,
         ticker=ticker,
-        strategy_name="ma_cross",
-        fast=fast,
-        slow=slow,
+        strategy_name=strategy_cls.__name__,
         start_year=start_year,
         end_year=end_year,
         final_value=cerebro.broker.getvalue(),
+        **strategy_param,
     )
 
-def run_multipl_ma(tickers, fast, slow, start_year, end_year, cash=100_000):
-    # print("her")
-    results = [] 
-    for ticker in tickers:
-        results.append(run_single_ma(
-            ticker=ticker,
-            fast=fast,
-            slow=slow,
-            start_year=start_year,
-            end_year=end_year,
-            cash=cash
-        )   )
-
-    return results
-    
+def run_multipl(tickers, strategy_cls, strategy_param,fast, slow, start_year, end_year, cash=100_000):
+    return [
+        run_single(
+                ticker, 
+                strategy_cls, 
+                strategy_param,
+                fast, 
+                slow,
+                start_year, 
+                end_year,
+                cash=100_000
+        )
+        for ticker in tickers
+    ]
 
 
 def run_buy_and_hold(ticker, start_year, end_year, cash=100_000):
@@ -127,7 +127,7 @@ def multiple_buy_and_hold(tickers, start_year, end_year, cash=100_000):
         )
     return results
 
-def optimize_ma(ticker, start_year, end_year, cash=100_000):
+def optimize(ticker, start_year, end_year, cash=100_000):
     cerebro = bt.Cerebro()
     cerebro.adddata(make_data_feed(ticker, start_year, end_year))
 
@@ -169,11 +169,13 @@ def optimize_ma(ticker, start_year, end_year, cash=100_000):
     )
 
     return rows
-def multiple_opt_ma(tickers, start_year, end_year, cash=100_000):
+
+
+def multiple_optimize(tickers, start_year, end_year, cash=100_000):
     results = []
     for ticker in tickers:
         results.append(
-            optimize_ma(
+            optimize(
                 ticker=ticker,
                 start_year=start_year,
                 end_year=end_year,

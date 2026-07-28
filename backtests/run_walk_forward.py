@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.engine import optimize_ma, run_single_ma, run_buy_and_hold, run_multipl_ma, multiple_opt_ma, multiple_buy_and_hold
+from src.engine import run_multipl,multiple_optimize, multiple_buy_and_hold
 from src.plotting import plot_equity_curves
-
-
+from strategies import moving_across
+from strategies import buy_n_hold
 def remove_large_objects(row):
     clean = row.copy()
     clean.pop("portfolio_values", None)
@@ -23,29 +23,26 @@ def main():
     test_end = 2025
 
     print("Optimizing on training period...")
-    train_results = multiple_opt_ma(tickers=tickers, start_year=train_start, end_year=train_end) 
-    #optimize_ma(tickers, train_start, train_end)
-    # print("===")
-    # print(type(train_results))
-    # print(train_results[0]["ticker"])
-    # print("===")
+    train_results = multiple_optimize(tickers=tickers, start_year=train_start, end_year=train_end) 
     best = train_results
 
-    print("Best train parameter:")
-    print(type(best))
+    print(f"Best train parameter:{best}")
+
 
     print("Testing MA strategy...")
-    ma_test = run_multipl_ma (  #run_single_ma
+    ma_test = run_multipl ( 
         tickers=tickers,
-        fast=best["fast"],
-        slow=best["slow"],
+        strategy_cls=moving_across,
+        strategy_param=best,
         start_year=test_start,
         end_year=test_end,
     )
 
     print("Running benchmark...")
-    benchmark = multiple_buy_and_hold(#run_buy_and_hold(
+    benchmark = run_multipl(
         tickers=tickers,
+        strategy_cls=buy_n_hold,
+        strategy_param={},
         start_year=test_start,
         end_year=test_end,
     )

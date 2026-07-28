@@ -3,29 +3,7 @@ import backtrader as bt
 from pathlib import Path
 import pandas as pd
 
-class MovingAverageCross(bt.Strategy):
-    params = (
-        ("fast", 20),
-        ("slow", 50),
-    )
 
-    def __init__(self):
-        self.ma_fast = bt.ind.SMA(self.data.close, period=self.params.fast)
-        self.ma_slow = bt.ind.SMA(self.data.close, period=self.params.slow)
-        self.cross = bt.ind.CrossOver(self.ma_fast, self.ma_slow)
-
-    def next(self):
-        if not self.position:
-            if self.cross > 0:
-                self.buy()
-        else:
-            if self.cross < 0:
-                self.sell()
-    
-class BuyAndHold(bt.Strategy):
-    def next(self):
-        if not self.position:
-            self.buy
 
 
 def run_one_ticker(ticker, start_year, end_year):
@@ -51,11 +29,7 @@ def run_one_ticker(ticker, start_year, end_year):
     cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
  
 
-    cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, _name="sharpe")
-    cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
-    cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
-    # cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
-    cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
+    
     cerebro.broker.setcash(100_000)
     cerebro.broker.setcommission(commission=0.001)
 
@@ -137,47 +111,7 @@ def run_all():
     print("\nSaved to reports/all_optimization_results.csv")
     
 
-def walk_forward_validation():
-    ticker = "SPY"
-    
-    train_results = run_one_ticker(ticker=ticker, 
-                                   start_year=2020,
-                                   end_year=2023)
-    best_train = train_results[0]
-    
-    test_result = run_single_strategy(
-        ticker=ticker,
-        fast=best_train["fast"],
-        slow=best_train["slow"],
-        start_year=2023, 
-        end_year=2025,
-    )
 
-    benchmark_result = run_buy_and_hold(
-        ticker=ticker,
-        start_year=2023,
-        end_year=2025
-    )
-   
-    df = pd.DataFrame([
-        {
-            "phase":"train",
-            "startegy": "ma_cross",
-            **best_train,
-            "start_year":2020,
-            "end_year":2023,
-        },
-        {
-            "phase":"test",
-            **test_result,
-        },
-        benchmark_result,
-    ])
-
-    Path("reports").mkdir(exist_ok=True)
-    df.to_csv("reports/walk_forward_spy_with_benchmark.csv", index=False)
-    print(df)
-    print("\nSaved to reports/walk_forward_spy_with_benchmark.csv")
 
 def run_single_strategy(ticker, fast, slow, start_year, end_year):
     cerebro = bt.Cerebro()
