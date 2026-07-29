@@ -71,14 +71,17 @@ def run_single(ticker, strategy_cls, strategy_param, start_year, end_year, cash=
         **strategy_param,
     )
 
-def run_multipl(tickers, strategy_cls, strategy_param,fast, slow, start_year, end_year, cash=100_000):
+def run_multipl(tickers, 
+                strategy_cls, 
+                strategy_param,
+                start_year, 
+                end_year, 
+                cash=100_000):
     return [
         run_single(
                 ticker, 
                 strategy_cls, 
                 strategy_param,
-                fast, 
-                slow,
                 start_year, 
                 end_year,
                 cash=100_000
