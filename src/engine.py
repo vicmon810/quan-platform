@@ -19,8 +19,19 @@ def add_standard_analyzers(cerebro):
 
 
 def make_data_feed(ticker, start_year, end_year):
+    if not ticker:
+        raise ValueError("Ticker cannot be empty")
+
+    if start_year >= end_year:
+        raise ValueError("start_year must be eariler than end_year")
+
     data_path = Path(f"data/raw/{ticker}.csv")
 
+    if not data_path.is_file():
+        raise FileNotFoundError(
+            f"Data file not found: {data_path}"
+        )
+    
     return bt.feeds.YahooFinanceCSVData(
         dataname=str(data_path),
         fromdate=datetime(start_year, 1, 1),
@@ -50,7 +61,7 @@ def run_single(ticker, strategy_cls, strategy_param, start_year, end_year, cash=
     cerebro = bt.Cerebro()
     cerebro.adddata(make_data_feed(ticker, start_year, end_year))
 
-    cerebro.addstrategy(strategy=strategy_cls, **strategy_param)
+    cerebro.addstrategy(strategy_cls, **strategy_param)
     cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
 
     add_standard_analyzers(cerebro)
@@ -77,6 +88,8 @@ def run_multipl(tickers,
                 start_year, 
                 end_year, 
                 cash=100_000):
+    if not tickers:
+        raise ValueError("tickers cannot be empty")
     return [
         run_single(
                 ticker, 
@@ -84,51 +97,31 @@ def run_multipl(tickers,
                 strategy_param,
                 start_year, 
                 end_year,
-                cash=100_000
+                cash=cash
         )
         for ticker in tickers
     ]
 
 
 def run_buy_and_hold(ticker, start_year, end_year, cash=100_000):
-    cerebro = bt.Cerebro()
-    cerebro.adddata(make_data_feed(ticker, start_year, end_year))
-
-    cerebro.addstrategy(BuyAndHold)
-    cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
-
-    add_standard_analyzers(cerebro)
-
-    cerebro.broker.setcash(cash)
-    cerebro.broker.setcommission(commission=0.001)
-
-    results = cerebro.run(maxcpus=1)
-    strat = results[0]
-
-    return extract_result(
-        strat=strat,
+    return run_single(
         ticker=ticker,
-        strategy_name="buy_and_hold",
-        fast=None,
-        slow=None,
+        strategy_cls=BuyAndHold,
+        strategy_param={},
         start_year=start_year,
         end_year=end_year,
-        final_value=cerebro.broker.getvalue(),
+        cash=cash,
     )
 
-
 def multiple_buy_and_hold(tickers, start_year, end_year, cash=100_000):
-    results = []
-    for ticker in tickers:
-        results.append(
-            run_buy_and_hold(
-                ticker, 
-                start_year,
-                end_year,
-                cash
-            )
-        )
-    return results
+    return run_multipl(
+        tickers=tickers,
+        strategy_cls=BuyAndHold,
+        strategy_param={},
+        start_year=start_year,
+        end_year=end_year,
+        cash=cash 
+    ) 
 
 def optimize(ticker, start_year, end_year, cash=100_000):
     cerebro = bt.Cerebro()
