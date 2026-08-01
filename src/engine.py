@@ -54,6 +54,7 @@ def extract_result(strat, ticker, strategy_name,
         "annual_return": strat.analyzers.returns.get_analysis().get("rnorm100"),
         "trades": strat.analyzers.trades.get_analysis(),
         "portfolio_values": strat.analyzers.portfolio_value.get_analysis(),
+        "signal_history": getattr(strat, "signal_history", None)
     }
 
 
