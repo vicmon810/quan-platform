@@ -1,7 +1,7 @@
 import pandas as pd
 
 from src import reporting
-
+import pytest
 
 def test_build_strategy_comparison():
     results = [
@@ -56,3 +56,12 @@ def test_build_strategy_comparison():
     assert comparison.iloc[1]["market_exposure"] == (
         0.55
     )
+
+
+
+def test_build_strategy_comparsion_rejection_empty_results():
+    with pytest.raises(
+        ValueError,
+        match="at least one strategy result"
+    ):
+        reporting.build_strategy_comparison([])
