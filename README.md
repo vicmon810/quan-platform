@@ -1,5 +1,7 @@
 # Quant Platform 
 
+[![Python CI](https://github.com/vicmon810/quan-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vicmon810/quan-platform/actions/workflows/ci.yml)
+
 A python based algorithmic trading backtest framework with walk-forward optimization and multi-asset suppot 
 
 ![image](reports/equity_curve_spy.png)
