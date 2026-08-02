@@ -84,7 +84,7 @@ def test_run_single_buy_and_hold_one_rising_market(tmp_path, monkeypatch):
     assert result["ticker"] == "TEST"
     assert result["strategy"] == "BuyAndHold"
     assert result["final_value"] > initial_cash
-    assert result["annual_return"] is not None 
+    assert result["cagr"] is not None 
     assert result["max_drawdown"] >= 0 
     assert len(result["portfolio_values"]) > 0 
     portfolio_values = result["portfolio_values"]
@@ -129,7 +129,7 @@ def test_run_multiple_buy_and_hold_on_rising_market(tmp_path, monkeypatch):
     for result in results:
         assert result["strategy"] == "BuyAndHold"
         assert result["final_value"] > initial_cash
-        assert result["annual_return"] is not None 
+        assert result["cagr"] is not None 
         assert result["max_drawdown"] >= 0 
         assert len(result["portfolio_values"]) > 0 
 
@@ -263,7 +263,7 @@ def test_run_multiple_time_momentum_on_rising_market(
     for result in results:
         assert result["strategy"] == "TimeSeriseMomentum"
         assert result["final_value"] > 100_000
-        assert result["annual_return"] is not None 
+        assert result["cagr"] is not None 
         assert result["max_drawdown"] >= 0 
         assert len(result["portfolio_values"]) > 0 
 
@@ -292,7 +292,7 @@ def test_run_single_time_momentum_on_rising_market(
 
     assert result["final_value"] > 100_000
 
-    assert result["annual_return"] is not None 
+    assert result["cagr"] is not None 
     assert result["max_drawdown"] >= 0 
     assert len(result["portfolio_values"]) > 0 
 
@@ -317,7 +317,7 @@ def test_run_single_time_momentum_on_falling_market(
 
     assert result["final_value"] <= 100_000
 
-    assert result["annual_return"] is not None 
+    assert result["cagr"] is not None 
     assert result["max_drawdown"] >= 0 
     assert len(result["portfolio_values"]) > 0 
     assert result["market_exposure"] == pytest.approx(0.0)
@@ -355,6 +355,6 @@ def test_run_multiple_time_momentum_on_falling_market(
     for result in results:
         assert result["strategy"] == "TimeSeriseMomentum"
         assert result["final_value"] <= 100_000
-        assert result["annual_return"] is not None 
+        assert result["cagr"] is not None 
         assert result["max_drawdown"] >= 0 
         assert len(result["portfolio_values"]) > 0 

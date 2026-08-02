@@ -29,7 +29,7 @@ class PortfolioValueAnalyzer(bt.Analyzer):
             exposure = 0.0
 
         self.values.append({
-            "data": self.strategy.datetime.date(0),
+            "date": self.strategy.datetime.date(0),
             "value": portfoli_value,
             "exposure":exposure,
         })

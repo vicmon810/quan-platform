@@ -31,7 +31,7 @@ def calculate_cagr(
 ) -> float:
     
     """Calculate compound annual growth rate""" 
-    if years < 1:
+    if years <= 0:
         raise ValueError(
             "years must be positive",
         )
@@ -215,20 +215,20 @@ def calculate_market_exposure(exposures: Sequence[float]) -> float|None:
 
     return statistics.fmean(exposure_values)
 
-def calculate_performance_metrics(porfolio_record: Sequence[dict[str, Any]]) -> dict[str,float | None]:
+def calculate_performance_metrics(portfolio_record: Sequence[dict[str, Any]]) -> dict[str,float | None]:
     """calculate all perofrmance metrics from portfolio records"""
-    if len(porfolio_record) < 3 : raise ValueError("at least three portfolio are required")
+    if len(portfolio_record) < 3 : raise ValueError("at least three portfolio are required")
 
     values = [
-        float(record["value"]) for record in porfolio_record
+        float(record["value"]) for record in portfolio_record
     ]
 
     expsoure = [
-        float(record["exposure"]) for record in porfolio_record
+        float(record["exposure"]) for record in portfolio_record
     ]
 
-    start_date = porfolio_record[0]["date"]
-    end_date = porfolio_record[-1]["date"]
+    start_date = portfolio_record[0]["date"]
+    end_date = portfolio_record[-1]["date"]
 
     cagr = calculate_cagr_from_dates(
         values=values,
