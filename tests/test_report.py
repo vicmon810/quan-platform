@@ -65,3 +65,16 @@ def test_build_strategy_comparsion_rejection_empty_results():
         match="at least one strategy result"
     ):
         reporting.build_strategy_comparison([])
+
+
+def test_build_strategy_comparison_rejects_missing_columns():
+    results = [
+        {
+            "ticker": "SPY",
+            "strategy":"BuyAndHold",
+            "final_value":150_000.0
+        }
+    ]
+
+    with pytest.raises(ValueError,match="missing required comparison fields"):
+        reporting.build_strategy_comparison(results=results)
