@@ -8,8 +8,9 @@ from strategies.moving_across import MovingAverageCross
 from strategies.buy_n_hold import BuyAndHold
 from strategies.cross_momentum import CrossSectionalMomentum
 from src.analyzers import PortfolioValueAnalyzer
-
-
+from src.metrics import calculate_market_exposure, calculate_performance_metrics
+from collections.abc import Sequence
+from typing import Any
 def add_standard_analyzers(cerebro):
     cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, _name="sharpe")
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
@@ -39,9 +40,44 @@ def make_data_feed(ticker, start_year, end_year):
         reverse=False,
     )
 
+# def market_exposure(portfolio_values: Sequence[dict[str, Any]])-> float:
+#         """
+#         Desc: Compute the average market exposure from a strategy's
+#             recorded portfolio value history.
+#         Param: portfolio_values (list[dict]) - each record must contain
+#             an "exposure" field
+#         Return: float - average market exposure (see calculate_market_exposure)
+#         """    
+#         exposures = [
+#             record["exposure"]
+#             for record in portfolio_values
+#         ]
+    
+#         return calculate_market_exposure(exposures=exposures)
+    
+def performance_metric(portfolio_value:Sequence[dict[str,Any]]) -> dict[str,float|None]:
+    """Calculate all performance metrics."""
+
+    return calculate_performance_metrics(portfolio_record=portfolio_value)
 
 def extract_result(strat, ticker, strategy_name, 
                  start_year, end_year, final_value, **strategy_params):
+    """
+    Desc: Package a completed backtrader strategy run into a flat
+          result dict, pulling metrics from the strategy's analyzers
+          and computing derived stats like market exposure.
+    Param: strat - the finished backtrader strategy instance
+           ticker (str) - the ticker being tested
+           strategy_name (str) - name of the strategy class used
+           start_year (int), end_year (int) - backtest date range
+           final_value (float) - final portfolio value from the broker
+           **strategy_params - any additional strategy parameters to
+           include in the result (e.g. fast, slow, lookback)
+    Return: dict - flat summary of the backtest result
+    """
+    
+    portfolio_value = strat.analyzers.portfolio_value.get_analysis()
+    metrics = performance_metric(portfolio_value=portfolio_value)
     return {
         "ticker": ticker,
         "strategy": strategy_name,
@@ -49,12 +85,10 @@ def extract_result(strat, ticker, strategy_name,
         "end_year": end_year,
         "final_value": final_value,
         **strategy_params,
-        "sharpe": strat.analyzers.sharpe.get_analysis().get("sharperatio"),
-        "max_drawdown": strat.analyzers.drawdown.get_analysis()["max"]["drawdown"],
-        "annual_return": strat.analyzers.returns.get_analysis().get("rnorm100"),
         "trades": strat.analyzers.trades.get_analysis(),
         "portfolio_values": strat.analyzers.portfolio_value.get_analysis(),
-        "signal_history": getattr(strat, "signal_history", None)
+        "signal_history": getattr(strat, "signal_history", None),
+        **metrics
     }
 
 

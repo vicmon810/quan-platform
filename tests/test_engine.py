@@ -83,12 +83,24 @@ def test_run_single_buy_and_hold_one_rising_market(tmp_path, monkeypatch):
 
     assert result["ticker"] == "TEST"
     assert result["strategy"] == "BuyAndHold"
-
     assert result["final_value"] > initial_cash
-
     assert result["annual_return"] is not None 
     assert result["max_drawdown"] >= 0 
     assert len(result["portfolio_values"]) > 0 
+    portfolio_values = result["portfolio_values"]
+    assert portfolio_values
+
+    assert all (
+        "exposure" in record
+        for record in portfolio_values
+    )
+
+    assert any(
+        record['exposure'] > 0 
+        for record in portfolio_values
+    )
+
+    assert result["market_exposure"] <= 1
 
 
 def test_run_multiple_buy_and_hold_on_rising_market(tmp_path, monkeypatch):
@@ -308,6 +320,7 @@ def test_run_single_time_momentum_on_falling_market(
     assert result["annual_return"] is not None 
     assert result["max_drawdown"] >= 0 
     assert len(result["portfolio_values"]) > 0 
+    assert result["market_exposure"] == pytest.approx(0.0)
 
 
 def test_run_multiple_time_momentum_on_falling_market(
@@ -338,6 +351,7 @@ def test_run_multiple_time_momentum_on_falling_market(
     assert len(results) == len(tickers)
     return_tickers = {result["ticker"] for result in results}
     assert return_tickers == set(tickers)
+
     for result in results:
         assert result["strategy"] == "TimeSeriseMomentum"
         assert result["final_value"] <= 100_000
