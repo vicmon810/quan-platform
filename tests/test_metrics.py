@@ -401,3 +401,46 @@ def test_performance_metrics_requires_three_records():
         metrics.calculate_performance_metrics(
             portfolio_records
         )
+
+
+def test_calculate_drawdown_series():
+    values = [
+        100.0,
+        120.0,
+        90.0,
+        96.0,
+        130.0,
+    ]
+
+    result = metrics.calculate_drawdown_series(values)
+
+    assert result == pytest.approx(
+        [
+            0.0,
+            0.0,
+            0.25,
+            0.20,
+            0.0,
+        ]
+    )
+
+def test_calculate_drawdown_series():
+    values = [
+        100.0,
+        120.0,
+        90.0,
+        96.0,
+        130.0,
+    ]
+
+    result = metrics.calculate_drawdown_series(values)
+
+    assert result == pytest.approx(
+        [
+            0.0,
+            0.0,
+            0.25,
+            0.20,
+            0.0,
+        ]
+    )

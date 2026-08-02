@@ -37,3 +37,41 @@ def build_strategy_comparison(
     return pd.DataFrame(results)[
         COMPARISON_COLUMNS
     ].copy()
+
+
+def add_metric_ranks(comparison:pd.DataFrame) -> pd.DataFrame:
+    """add per-metric ranks to a strategy comparison table"""
+    ranked = comparison.copy()
+
+    ranked["cagr_rank"] = ranked["cagr"].rank(
+        ascending=False,
+        method='min',
+        na_option='bottom'
+    )
+    ranked["max_drawdown_rank"] = ranked["max_drawdown"].rank(
+            ascending=True,
+            method='min',
+            na_option='bottom'
+        )
+    ranked["daily_sharpe_rank"] = ranked["daily_sharpe"].rank(
+            ascending=False,
+            method='min',
+            na_option='bottom'
+        )
+    ranked["calmar_rank"] = ranked["calmar"].rank(
+            ascending=False,
+            method='min',
+            na_option='bottom'
+        )
+    rank_columns = [
+        "cagr_rank",
+        "max_drawdown_rank",
+        "daily_sharpe_rank",
+        "calmar_rank",
+    ]
+
+    ranked[rank_columns] = (
+        ranked[rank_columns].astype("Int64")
+    )
+
+    return ranked

@@ -250,3 +250,24 @@ def calculate_performance_metrics(portfolio_record: Sequence[dict[str, Any]]) ->
         "calmar": calculate_calmar_ratio(cagr=cagr,max_drawdowm=max_drawdown),
         "market_exposure": calculate_market_exposure(exposures=expsoure)
     }
+
+
+def calculate_drawdown_series(values:Sequence[float],) -> list[float]:
+    """calculate positive drawdown at each portfolio obs"""
+
+    if not values: raise ValueError("at least one portfolio value is required")
+
+    peak = float(values[0])
+    drawdowns: list[float] = []
+
+    for value in values:
+        current_value = float(value)
+
+        if current_value <= 0: raise ValueError("portfolio values must be positive")
+
+        peak = max(peak, current_value)
+
+        drawdown = (peak - current_value) /peak
+
+        drawdowns.append(drawdown)
+    return drawdowns

@@ -67,7 +67,7 @@ def test_build_strategy_comparsion_rejection_empty_results():
         reporting.build_strategy_comparison([])
 
 
-def test_build_strategy_comparison_rejects_missing_columns():
+def test_build_strategy_comparison_rejects_empty_results():
     results = [
         {
             "ticker": "SPY",
@@ -78,3 +78,68 @@ def test_build_strategy_comparison_rejects_missing_columns():
 
     with pytest.raises(ValueError,match="missing required comparison fields"):
         reporting.build_strategy_comparison(results=results)
+
+
+def test_add_metric_ranks():
+    comparison = pd.DataFrame(
+        [
+            {
+                "ticker": "SPY",
+                "strategy": "BuyAndHold",
+                "final_value": 150_000.0,
+                "cumulative_return": 0.50,
+                "cagr": 0.12,
+                "max_drawdown": 0.30,
+                "daily_sharpe": 0.80,
+                "calmar": 0.40,
+                "market_exposure": 0.95,
+            },
+            {
+                "ticker": "SPY",
+                "strategy": "TimeSeriesMomentum",
+                "final_value": 135_000.0,
+                "cumulative_return": 0.35,
+                "cagr": 0.09,
+                "max_drawdown": 0.15,
+                "daily_sharpe": 0.95,
+                "calmar": 0.60,
+                "market_exposure": 0.55,
+            },
+        ]
+    )
+
+    ranked = reporting.add_metric_ranks(comparison)
+
+    buy_and_hold = ranked.loc[
+        ranked["strategy"] == "BuyAndHold"
+    ].iloc[0]
+
+    momentum = ranked.loc[
+        ranked["strategy"] == "TimeSeriesMomentum"
+    ].iloc[0]
+    assert buy_and_hold["cagr_rank"] == 1
+    assert momentum["cagr_rank"] == 2
+
+    assert momentum["max_drawdown_rank"] == 1
+    assert buy_and_hold["max_drawdown_rank"] == 2
+
+    assert momentum["daily_sharpe_rank"] == 1
+    assert momentum["calmar_rank"] == 1
+    
+
+def test_add_metric_ranks_does_not_modify_input():
+    comparison = pd.DataFrame(
+        [
+            {
+                "cagr": 0.10,
+                "max_drawdown": 0.20,
+                "daily_sharpe": 0.80,
+                "calmar": 0.50,
+            }
+        ]
+    )
+
+    original_columns = comparison.columns.tolist()
+
+    reporting.add_metric_ranks(comparison=comparison)
+    assert comparison.columns.tolist() == original_columns

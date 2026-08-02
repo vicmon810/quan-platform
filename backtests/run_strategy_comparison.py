@@ -8,8 +8,8 @@ from strategies.moving_across import MovingAverageCross
 from strategies.time_serise_momentum import (
     TimeSeriseMomentum,
 )
-
-
+from src.reporting import (add_metric_ranks, build_strategy_comparison)
+from src.plotting import plot_drawdown_curves
 def main():
     ticker = "SPY"
     start_year = 2020
@@ -51,7 +51,7 @@ def main():
     ]
 
     comparison = build_strategy_comparison(results=results)
-
+    ranked_comparison = add_metric_ranks(comparison=comparison)
     report_dir = Path("reports")
 
     report_dir.mkdir(
@@ -59,11 +59,9 @@ def main():
         exist_ok=True,
     )
 
-    comparison.to_csv(
-        report_dir / "strategy_comparisoin.csv",
-        index=False,
-    )
+    comparison.to_csv(report_dir / "strategy_comparison.csv",index=False,)
 
+    ranked_comparison.to_csv(report_dir/"ranked_comparison.csv", index=False)
     dispay_table = comparison.copy()
 
     percentage_columns = [
@@ -73,7 +71,7 @@ def main():
         "market_exposure",
     ]
     for column in percentage_columns:
-        dispay_table[column] = (dispay_table[column].map(lambda value: f"value:.2%"))
+        dispay_table[column] = (dispay_table[column].map(lambda value: f"{value:.2%}"))
 
     numeric_columns = [
         "final_value",
@@ -92,13 +90,11 @@ def main():
                 )
             )
         )
-
-    print(dispay_table.to_string(index=False))
-
-    print(
-        "\nSaved:"
-        "\nreports/strategy_comparison.csv"
-    )
-
+    drawdown_output_path = plot_drawdown_curves(results=results, output_path="reports/drawdown_comparison.png")
+    # print(dispay_table.to_string(index=False))
+    # print("="*20)
+    # print(ranked_comparison.to_string(index=False))
+    print("\nSaved:\nreports/strategy_comparison.csv & ranked_comparison.csv")
+    print(drawdown_output_path)
 if __name__ == "__main__":
     main()
