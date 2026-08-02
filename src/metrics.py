@@ -215,20 +215,18 @@ def calculate_market_exposure(exposures: Sequence[float]) -> float|None:
 
     return statistics.fmean(exposure_values)
 
-def calculate_performance_metrics(portfolio_record: Sequence[dict[str, Any]]) -> dict[str,float | None]:
+def calculate_performance_metrics(portfolio_records: Sequence[dict[str, Any]]) -> dict[str,float | None]:
     """calculate all perofrmance metrics from portfolio records"""
-    if len(portfolio_record) < 3 : raise ValueError("at least three portfolio are required")
+    if len(portfolio_records) < 3 : raise ValueError("at least three portfolio are required")
 
-    values = [
-        float(record["value"]) for record in portfolio_record
-    ]
+    values = [float(record["value"]) for record in portfolio_records]
 
-    expsoure = [
-        float(record["exposure"]) for record in portfolio_record
-    ]
+    expsoure = [float(record["exposure"]) for record in portfolio_records]
 
-    start_date = portfolio_record[0]["date"]
-    end_date = portfolio_record[-1]["date"]
+    dates = [record['date'] for record in portfolio_records]
+
+    start_date = portfolio_records[0]["date"]
+    end_date = portfolio_records[-1]["date"]
 
     cagr = calculate_cagr_from_dates(
         values=values,
@@ -236,9 +234,15 @@ def calculate_performance_metrics(portfolio_record: Sequence[dict[str, Any]]) ->
         end_date=end_date
     )
 
-    max_drawdown = calculate_max_drawdown(
-        values=values
-    )
+    max_drawdown = calculate_max_drawdown(values=values)
+    drawdown_series = calculate_drawdown_series(values=values)
+    drawdown_duration_series = calculate_drawdown_duration_series(dates=dates, drawdowns=drawdown_series)
+
+    max_drawdown_duration = calculate_max_drawdown_duration(drawdown_duration_series)
+
+    average_drawdown_duration = calculate_average_duration(drawdown_duration_series)
+
+    
 
     return {
         "cumulative_return":(
@@ -246,9 +250,11 @@ def calculate_performance_metrics(portfolio_record: Sequence[dict[str, Any]]) ->
         ),
         "cagr": cagr,
         "max_drawdown": max_drawdown,
+        "max_drawdown_duration_days":max_drawdown_duration,
+        "average_drawdown_duration_days": average_drawdown_duration,
         "daily_sharpe": calculate_daily_sharpe(values=values),
         "calmar": calculate_calmar_ratio(cagr=cagr,max_drawdowm=max_drawdown),
-        "market_exposure": calculate_market_exposure(exposures=expsoure)
+        "market_exposure": calculate_market_exposure(exposures=expsoure),
     }
 
 
@@ -271,3 +277,66 @@ def calculate_drawdown_series(values:Sequence[float],) -> list[float]:
 
         drawdowns.append(drawdown)
     return drawdowns
+
+
+def calculate_drawdown_duration_series(dates:Sequence[date], drawdowns:Sequence[float]) -> list[int]:
+    """
+    calcualte the number of calendar days spent below the latest peak
+    a drawdown zero means portfolio is at a peak, so duration reset to zero
+    """
+    if len(dates) != len(drawdowns):
+        raise ValueError("dates and drawdown must have same length")
+
+    if not dates or not drawdowns:
+        raise ValueError("dates and drawdowns must not be empty")
+    
+    peak_date = dates[0]
+    durations: list[int] = []
+
+    for current_date, drawdown in zip(dates, drawdowns):
+        if drawdown == 0:
+            peak_date = current_date
+            durations.append(0)
+        else:
+            duration_days = (current_date - peak_date).days
+            durations.append(duration_days)
+
+    return durations
+
+
+def calculate_max_drawdown_duration(durations:Sequence[int]) -> int :
+    """
+    Calculate the longest drawdown duration (in days) from a series
+    of daily drawdown durations.
+    """
+    if not durations: raise ValueError("at least one duration value is required")
+    return max(durations)
+
+def calculate_average_duration(durations:Sequence[int]) -> int:
+    """
+    Calculate the average length of drawdown episodes.
+
+    Each episode is a run of consecutive nonzero durations (bounded by
+    zeros, which mark a return to peak). The episode's length is taken
+    as its maximum duration value, then averaged across all episodes.
+    """
+    if not durations:
+        raise ValueError("at least one duration value is required")
+
+    episode_maxes = []
+    current_max = 0
+
+    for duration in durations:
+        if duration == 0:
+            if current_max > 0:
+                episode_maxes.append(current_max)
+            current_max = 0 
+        else:
+            current_max = max(current_max, duration)
+    # handle case where series ends mid-drawdown
+    if current_max >0:
+        episode_maxes.append(current_max)
+    if not episode_maxes:return 0.0
+
+    return statistics.fmean(episode_maxes)
+    

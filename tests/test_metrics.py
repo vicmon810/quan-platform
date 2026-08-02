@@ -424,23 +424,152 @@ def test_calculate_drawdown_series():
         ]
     )
 
-def test_calculate_drawdown_series():
-    values = [
-        100.0,
-        120.0,
-        90.0,
-        96.0,
-        130.0,
+def test_calculate_drawdown_duration_series():
+    dates = [
+        date(2024, 1, 1),
+        date(2024, 1, 2),
+        date(2024, 1, 3),
+        date(2024, 1, 4),
+        date(2024, 1, 5),
     ]
 
-    result = metrics.calculate_drawdown_series(values)
+    drawdowns = [
+        0.0,
+        0.10,
+        0.20,
+        0.05,
+        0.0,
+    ]
 
-    assert result == pytest.approx(
-        [
-            0.0,
-            0.0,
-            0.25,
-            0.20,
-            0.0,
-        ]
+    result = metrics.calculate_drawdown_duration_series(
+        dates=dates,
+        drawdowns=drawdowns,
     )
+
+    assert result == [
+        0,
+        1,
+        2,
+        3,
+        0,
+    ]
+
+
+def test_calculate_drawdown_duration_series_reject_mismatech_lengths():
+    dates =[
+        date(2024,1,1),
+        date(2024,1,2),
+        date(2024,1,3)
+    ]
+
+    drawdowns = [0.0,0.1]
+
+    with pytest.raises(ValueError, match="dates and drawdown must have same length"):
+        metrics.calculate_drawdown_duration_series(dates=dates, drawdowns=drawdowns,)
+
+
+def test_calculate_drawdown_duration_series_rejects_empty_input():
+    with pytest.raises(
+        ValueError,
+        match="dates and drawdowns must not be empty",
+    ):
+        metrics.calculate_drawdown_duration_series(
+            dates=[],
+            drawdowns=[],
+        )
+
+
+
+def test_calculate_max_drawdown_duration():
+    duration = [ 0,
+        1,
+        2,
+        3,
+        0,
+        1,
+        2,
+        0,]
+    result = metrics.calculate_max_drawdown_duration(duration)
+    assert result == 3
+
+def test_calculate_max_drawdown_duration_rejects_empty_input():
+    with pytest.raises(
+        ValueError,
+        match="at least one duration value is required",
+    ):
+        metrics.calculate_max_drawdown_duration([])
+
+
+def test_calculate_average_drawdown_duration():
+    durations = [
+        0,
+        1,
+        2,
+        3,
+        0,
+        1,
+        2,
+        0,
+    ]
+    result = metrics.calculate_average_duration(durations)
+    assert result == pytest.approx(2.5)
+
+def test_calculate_performance_metrics_includes_drawdown_durations():
+    portfolio_records = [
+        {
+            "date": date(2024, 1, 1),
+            "value": 100.0,
+            "exposure": 1.0,
+        },
+        {
+            "date": date(2024, 1, 2),
+            "value": 90.0,
+            "exposure": 1.0,
+        },
+        {
+            "date": date(2024, 1, 3),
+            "value": 80.0,
+            "exposure": 1.0,
+        },
+        {
+            "date": date(2024, 1, 4),
+            "value": 70.0,
+            "exposure": 1.0,
+        },
+        {
+            "date": date(2024, 1, 5),
+            "value": 100.0,
+            "exposure": 1.0,
+        },
+        {
+            "date": date(2024, 1, 6),
+            "value": 90.0,
+            "exposure": 1.0,
+        },
+        {
+            "date": date(2024, 1, 7),
+            "value": 80.0,
+            "exposure": 1.0,
+        },
+        {
+            "date": date(2024, 1, 8),
+            "value": 100.0,
+            "exposure": 1.0,
+        },
+    ]
+
+    result = metrics.calculate_performance_metrics(
+        portfolio_records=portfolio_records
+    )
+
+    assert result["max_drawdown_duration_days"] == 3
+
+    assert result[
+        "average_drawdown_duration_days"
+    ] == pytest.approx(2.5)
+
+
+def test_calculate_average_drawdown_returns_zero_without_drawdown():
+    durations = [0,0,0,0,0]
+    result = metrics.calculate_average_duration(durations=durations)
+    assert result == pytest.approx(0.0)
