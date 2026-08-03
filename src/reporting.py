@@ -14,6 +14,8 @@ COMPARISON_COLUMNS = [
     "daily_sharpe",
     "calmar",
     "market_exposure",
+    "max_drawdown_duration_days",
+    "average_drawdown_duration_days",
 ]
 
 

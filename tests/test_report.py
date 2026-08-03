@@ -143,3 +143,40 @@ def test_add_metric_ranks_does_not_modify_input():
 
     reporting.add_metric_ranks(comparison=comparison)
     assert comparison.columns.tolist() == original_columns
+
+
+def test_build_strategy_comparison_includes_drawdown_duration_metrics():
+    results = [
+        {
+            "ticker": "SPY",
+            "strategy": "BuyAndHold",
+            "final_value": 150_000.0,
+            "cumulative_return": 0.50,
+            "cagr": 0.12,
+            "max_drawdown": 0.30,
+            "daily_sharpe": 0.80,
+            "calmar": 0.40,
+            "market_exposure": 0.95,
+            "max_drawdown_duration_days": 180,
+            "average_drawdown_duration_days": 45.5,
+        }
+    ]
+
+    comparison = reporting.build_strategy_comparison(results=results)
+
+    assert (comparison.iloc[0]["max_drawdown_duration_days"] == 180)
+    assert comparison.iloc[0]["average_drawdown_duration_days"] == pytest.approx(45.5)
+
+    assert comparison.columns.tolist() == [
+        "ticker",
+        "strategy",
+        "final_value",
+        "cumulative_return",
+        "cagr",
+        "max_drawdown",
+        "daily_sharpe",
+        "calmar",
+        "market_exposure",
+        "max_drawdown_duration_days",
+        "average_drawdown_duration_days",
+    ]

@@ -202,6 +202,6 @@ def run_buy_and_hold(ticker, start_year, end_year):
         "trade": strat.analyzers.trades.get_analysis(),
     }
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # run_all()
-    walk_forward_validation()
+    # walk_forward_validation()

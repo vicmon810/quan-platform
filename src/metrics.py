@@ -49,9 +49,7 @@ def calculate_cagr(
 
     final_value = float(values[-1])
     
-    return (
-        final_value / initial_value
-    ) ** (1/years) -1
+    return float( (final_value / initial_value) ** (1/years) -1)
 
 def calculate_years_between_dates(
         start_date: date,
@@ -87,28 +85,23 @@ def calculate_cagr_from_dates(
     )
 
 
-def calculate_max_drawdown(values: Sequence[float]):
+def calculate_max_drawdown(values: Sequence[float]) -> float:
     """
     Calculate maximum peak to troungh portfolio drawdown
     """
     if len(values) <= 1:
-        raise ValueError(
-            "at least two portfolio values"
-        )
+        raise ValueError("at least two portfolio values")
 
-    if any(
-        value <= 0
-        for value in values
-    ): raise ValueError(
-        "portfolio values must be positive"
-    )
-    running_peak = float(values[0])
-    values = np.asarray(values, dtype=float)
+    if any(value <= 0 for value in values):
+        raise ValueError("portfolio values must be positive")
+    
+    # running_peak = float(values[0])
+    values_array = np.asarray(values, dtype=float)
 
-    running_peak = np.maximum.accumulate(values)
-    drawdown = (running_peak - values) / running_peak
+    running_peak = np.maximum.accumulate(values_array)
+    drawdown_array = (running_peak - values_array) / running_peak
 
-    return float(drawdown.max())
+    return float(drawdown_array.max())
 
 
 
@@ -183,7 +176,7 @@ def calculate_daily_sharpe(
         dail_volatility, 0.0, abs_tol=1e-15
     ): return None 
 
-    return(mean_excess_return / dail_volatility * math.sqrt(trading_days))
+    return float(mean_excess_return / dail_volatility * math.sqrt(trading_days))
 
 
 def calculate_calmar_ratio(
@@ -312,7 +305,7 @@ def calculate_max_drawdown_duration(durations:Sequence[int]) -> int :
     if not durations: raise ValueError("at least one duration value is required")
     return max(durations)
 
-def calculate_average_duration(durations:Sequence[int]) -> int:
+def calculate_average_duration(durations:Sequence[int]) -> float:
     """
     Calculate the average length of drawdown episodes.
 

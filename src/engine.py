@@ -58,7 +58,7 @@ def make_data_feed(ticker, start_year, end_year):
 def performance_metric(portfolio_value:Sequence[dict[str,Any]]) -> dict[str,float|None]:
     """Calculate all performance metrics."""
 
-    return calculate_performance_metrics(portfolio_record=portfolio_value)
+    return calculate_performance_metrics(portfolio_records=portfolio_value)
 
 def extract_result(strat, ticker, strategy_name, 
                  start_year, end_year, final_value, **strategy_params):

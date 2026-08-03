@@ -60,15 +60,6 @@ def test_cagr_requires_positive_years():
             years=0,
         )
 
-def test_cagr_requires_positive_years():
-    with pytest.raises(
-        ValueError,
-        match="years must be positive",
-    ):
-        metrics.calculate_cagr(
-            values=[100_000, 121_000],
-            years=0,
-        )
 
 def test_cagr_requires_two_values():
     with pytest.raises(
