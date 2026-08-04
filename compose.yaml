@@ -1,0 +1,67 @@
+name: quant-platform
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: quant-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      TZ: UTC
+      PGTZ: UTC
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    networks:
+      - quant_backend
+
+  flyway:
+    image: flyway/flyway:13.0.0
+    container_name: quant-flyway
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      FLYWAY_USER: ${POSTGRES_USER}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_CONNECT_RETRIES: 60
+
+    volumes:
+      - ./database/migrations:/flyway/sql:ro
+
+    networks:
+      - quant_backend
+
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    name: quant_postgres_data
+
+networks:
+  quant_backend:
+    name: quant_backend
+    driver: bridge

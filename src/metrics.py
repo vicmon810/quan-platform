@@ -4,6 +4,43 @@ import numpy as np
 import math 
 import statistics
 from typing import Any
+import pandas as pd
+
+ZERO_VOLATILITY_EPSILON = 1e-12
+
+def _validate_rolling_parameters(
+    window: int,
+    trading_days: int,
+) -> None:
+    if window < 2:
+        raise ValueError(
+            "window must be at least 2"
+        )
+
+    if trading_days <= 0:
+        raise ValueError(
+            "trading_days must be positive"
+        )
+
+
+def _series_to_optional_floats(
+    values: pd.Series,
+) -> list[float | None]:
+    result: list[float | None] = []
+
+    for value in values:
+        numeric_value = float(value)
+
+        if (
+            pd.isna(value)
+            or not math.isfinite(numeric_value)
+        ):
+            result.append(None)
+        else:
+            result.append(numeric_value)
+
+    return result
+
 def calculate_cumulative_return(
         values: Sequence[float],
 ) -> float:
@@ -95,7 +132,6 @@ def calculate_max_drawdown(values: Sequence[float]) -> float:
     if any(value <= 0 for value in values):
         raise ValueError("portfolio values must be positive")
     
-    # running_peak = float(values[0])
     values_array = np.asarray(values, dtype=float)
 
     running_peak = np.maximum.accumulate(values_array)
@@ -189,11 +225,11 @@ def calculate_calmar_ratio(
     if max_drawdowm == 0:
         return None
 
-    if max_drawdowm <= 0:
+    if max_drawdowm < 0:
         raise ValueError("max_drawdowm cannot be negative")
     return cagr / max_drawdowm
 
-def calculate_market_exposure(exposures: Sequence[float]) -> float|None: 
+def calculate_market_exposure(exposures: Sequence[float]) -> float: 
     if len(exposures) == 0:
         raise ValueError("at least one exposure value is required")
 
@@ -208,7 +244,7 @@ def calculate_market_exposure(exposures: Sequence[float]) -> float|None:
 
     return statistics.fmean(exposure_values)
 
-def calculate_performance_metrics(portfolio_records: Sequence[dict[str, Any]]) -> dict[str,float | None]:
+def calculate_performance_metrics(portfolio_records: Sequence[dict[str, Any]]) -> dict[str,float | int | None]:
     """calculate all perofrmance metrics from portfolio records"""
     if len(portfolio_records) < 3 : raise ValueError("at least three portfolio are required")
 
@@ -227,8 +263,10 @@ def calculate_performance_metrics(portfolio_records: Sequence[dict[str, Any]]) -
         end_date=end_date
     )
 
-    max_drawdown = calculate_max_drawdown(values=values)
+   
     drawdown_series = calculate_drawdown_series(values=values)
+    max_drawdown = max(drawdown_series)
+
     drawdown_duration_series = calculate_drawdown_duration_series(dates=dates, drawdowns=drawdown_series)
 
     max_drawdown_duration = calculate_max_drawdown_duration(drawdown_duration_series)
@@ -332,4 +370,49 @@ def calculate_average_duration(durations:Sequence[int]) -> float:
     if not episode_maxes:return 0.0
 
     return statistics.fmean(episode_maxes)
+
+def calculate_rolling_volatility(values:Sequence[float], window:int, trading_days:int=252) -> list[float|None]:
+    """
+    Calculate annualized rolling volatility from a series of portfolio values.
+
+    Volatility is computed as the sample standard deviation of the
+    trailing `window` daily returns, annualized by sqrt(trading_days).
+    Returns None wherever fewer than `window` returns are available yet.
+    """
+    _validate_rolling_parameters(window=window, trading_days=trading_days,)
     
+    daily_returns = pd.Series(calculate_daily_returns(values=values), dtype="float64")
+
+    rolling_volatility = daily_returns.rolling(window=window).std(ddof=1)* math.sqrt(trading_days)
+
+    return [None if pd.isna(value) else float(value) for value in rolling_volatility]
+
+    
+def calculate_rolling_sharpe(values:Sequence[float], window:int, 
+                             annual_risk_free_rate:float=0.0, trading_days:int=252)-> list[float|None]:
+    """
+    Calculate annualized rolling Sharpe ratio from a series of portfolio values.
+
+    For each point, the Sharpe ratio is computed using the trailing
+    `window` portfolio values (i.e. `window` prices produce `window - 1`
+    daily returns). Returns None wherever fewer than `window` prices
+    are available yet.
+    """
+    _validate_rolling_parameters(window=window,trading_days=trading_days,)
+
+    # if trading_days <= 0:raise ValueError("trading_days must be positive")
+    if annual_risk_free_rate <= -1: raise ValueError("annual_risk_free_rate must be greater than -1")
+
+    daily_returns = pd.Series(calculate_daily_returns(values=values),dtype="float64")
+
+    daily_risk_free_rate = (1+annual_risk_free_rate) ** (1/trading_days) -1 
+    excess_returns = (daily_returns - daily_risk_free_rate)
+    rolling_mean = excess_returns.rolling(window=window).mean()
+    rolling_std = excess_returns.rolling(window=window).std(ddof=1)
+
+    safe_rolling_std = rolling_std.where(rolling_std > ZERO_VOLATILITY_EPSILON)
+
+    rolling_sharpe = rolling_mean.div(safe_rolling_std).mul(math.sqrt(trading_days))
+    return _series_to_optional_floats(rolling_sharpe)
+
+

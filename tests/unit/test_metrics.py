@@ -564,3 +564,42 @@ def test_calculate_average_drawdown_returns_zero_without_drawdown():
     durations = [0,0,0,0,0]
     result = metrics.calculate_average_duration(durations=durations)
     assert result == pytest.approx(0.0)
+
+
+def test_calculate_rolling_volatility():
+    values = [100.0,110.0,99.0,108.9]
+
+    result = metrics.calculate_rolling_volatility(values=values, window=2, trading_days=252)
+
+    expected_volatility = math.sqrt(0.02 * 252)
+
+    assert result[0] is None 
+    assert result[1] == pytest.approx(expected_volatility)
+    assert result[2] == pytest.approx(expected_volatility)
+
+
+def test_calculate_rolling_sharpe():
+    values = [
+        100.0,
+        102.0,
+        103.02,
+        106.1106,
+    ]
+
+    result = metrics.calculate_rolling_sharpe(
+        values=values,
+        window=2,
+        annual_risk_free_rate=0.0,
+        trading_days=252,
+    )
+
+    assert len(result) == 3
+    assert result[0] is None
+
+    assert result[1] == pytest.approx(
+        33.67491648096547
+    )
+
+    assert result[2] == pytest.approx(
+        22.449944320643652
+    )

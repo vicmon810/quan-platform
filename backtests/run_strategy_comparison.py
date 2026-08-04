@@ -2,13 +2,12 @@ from pathlib import Path
 
 
 from src.engine import run_single
-from src.reporting import build_strategy_comparison
 from strategies.buy_n_hold import BuyAndHold
 from strategies.moving_across import MovingAverageCross
 from strategies.time_serise_momentum import (
     TimeSeriseMomentum,
 )
-from src.reporting import (add_metric_ranks, build_strategy_comparison)
+from src.reporting import (add_metric_ranks, build_strategy_comparison,add_benchmark_deltas)
 from src.plotting import plot_drawdown_curves
 def main():
     ticker = "SPY"
@@ -52,6 +51,14 @@ def main():
 
     comparison = build_strategy_comparison(results=results)
     ranked_comparison = add_metric_ranks(comparison=comparison)
+    benchmark_comparison = add_benchmark_deltas(
+        comparison= ranked_comparison,
+        benchmark_strategy="BuyAndHold"
+    )
+
+    benchmark_comparison.to_csv("reports/benchmark_comparison.csv",index=False,)
+    print(f"\nSave:\nreport/benchmark_comparison.csv")
+
     report_dir = Path("reports")
 
     report_dir.mkdir(
