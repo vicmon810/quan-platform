@@ -101,14 +101,17 @@ def test_backtest_run_public_id_is_unique(
         asset_id=asset_id,
     )
 
-    public_id = db_connection.execute(
+    row = db_connection.execute(
         """
         SELECT public_id
         FROM quant.backtest_run
         WHERE id = %(run_id)s;
         """,
         {"run_id": first_id},
-    ).fetchone()["public_id"]
+    ).fetchone()
+
+    assert row is not None
+    public_id = row["public_id"]
 
     with pytest.raises(
         UniqueViolation
@@ -179,10 +182,10 @@ def test_backtest_run_public_id_is_unique(
 def test_backtest_run_rejects_invalid_values(
     db_connection: Connection[Any],
     asset_id: int,
-    overrides: dict[str, object],
+    overrides: dict[str, Any],
     constraint_name: str,
 ) -> None:
-    arguments: dict[str, object] = {
+    arguments: dict[str, Any] = {
         "asset_id": asset_id,
     }
 

@@ -212,10 +212,10 @@ def test_backtest_metric_rejects_missing_run(
 def test_backtest_metric_rejects_invalid_values(
     db_connection: Connection[Any],
     run_id: int,
-    overrides: dict[str, object],
+    overrides: dict[str, Any],
     constraint_name: str,
 ) -> None:
-    arguments: dict[str, object] = {
+    arguments: dict[str, Any] = {
         "backtest_run_id": run_id,
     }
 
@@ -245,14 +245,17 @@ def test_backtest_metric_allows_leveraged_exposure(
         market_exposure=Decimal("1.50"),
     )
 
-    exposure = db_connection.execute(
+    row = db_connection.execute(
         """
         SELECT market_exposure
         FROM quant.backtest_metric
         WHERE backtest_run_id = %(run_id)s;
         """,
         {"run_id": run_id},
-    ).fetchone()["market_exposure"]
+    ).fetchone()
+
+    assert row is not None
+    exposure = row["market_exposure"]
 
     assert exposure == Decimal(
         "1.500000000000000"
@@ -276,13 +279,15 @@ def test_deleting_run_cascades_to_metric(
         {"run_id": run_id},
     )
 
-    count = db_connection.execute(
+    row = db_connection.execute(
         """
         SELECT COUNT(*) AS count
         FROM quant.backtest_metric
         WHERE backtest_run_id = %(run_id)s;
         """,
         {"run_id": run_id},
-    ).fetchone()["count"]
+    ).fetchone()
+    assert row is not None
+    count = row["count"]
 
     assert count == 0

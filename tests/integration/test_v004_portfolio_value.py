@@ -102,7 +102,7 @@ def test_portfolio_value_allows_same_date_for_different_runs(
     db_connection: Connection[Any],
     run_id: int,
 ) -> None:
-    second_run_id = db_connection.execute(
+    row = db_connection.execute(
         """
         INSERT INTO quant.backtest_run (
             asset_id,
@@ -122,7 +122,10 @@ def test_portfolio_value_allows_same_date_for_different_runs(
         RETURNING id;
         """,
         {"run_id": run_id},
-    ).fetchone()["id"]
+    ).fetchone()
+
+    assert row is not None
+    second_run_id = row["id"]
 
     trading_date = date(2024, 1, 2)
 
@@ -138,15 +141,17 @@ def test_portfolio_value_allows_same_date_for_different_runs(
         trading_date=trading_date,
     )
 
-    count = db_connection.execute(
+    row = db_connection.execute(
         """
         SELECT COUNT(*) AS count
         FROM quant.portfolio_value
         WHERE trading_date = %(trading_date)s;
         """,
         {"trading_date": trading_date},
-    ).fetchone()["count"]
+    ).fetchone()
 
+    assert row is not None
+    count = row["count"]
     assert count == 2
 
 
@@ -218,10 +223,10 @@ def test_portfolio_value_rejects_missing_run(
 def test_portfolio_value_rejects_invalid_values(
     db_connection: Connection[Any],
     run_id: int,
-    overrides: dict[str, object],
+    overrides: dict[str, Any],
     constraint_name: str,
 ) -> None:
-    arguments: dict[str, object] = {
+    arguments: dict[str, Any] = {
         "backtest_run_id": run_id,
     }
 
@@ -270,15 +275,16 @@ def test_portfolio_value_allows_leveraged_exposure(
         market_exposure=Decimal("1.75"),
     )
 
-    exposure = db_connection.execute(
+    row = db_connection.execute(
         """
         SELECT market_exposure
         FROM quant.portfolio_value
         WHERE backtest_run_id = %(run_id)s;
         """,
         {"run_id": run_id},
-    ).fetchone()["market_exposure"]
-
+    ).fetchone()
+    assert row is not None
+    exposure = row["market_exposure"]
     assert exposure == Decimal(
         "1.750000000000000"
     )
@@ -308,15 +314,16 @@ def test_deleting_run_cascades_to_portfolio_values(
         {"run_id": run_id},
     )
 
-    count = db_connection.execute(
+    row = db_connection.execute(
         """
         SELECT COUNT(*) AS count
         FROM quant.portfolio_value
         WHERE backtest_run_id = %(run_id)s;
         """,
         {"run_id": run_id},
-    ).fetchone()["count"]
-
+    ).fetchone()
+    assert row is not None
+    count = row["count"]
     assert count == 0
 
 
