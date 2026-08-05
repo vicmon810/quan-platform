@@ -30,7 +30,7 @@ CREATE TABLE quant.backtest_run(
 
     CONSTRAINT pk_backtest_run PRIMARY KEY (id),
 
-    CONSTRAINT up_backtest_run_public_id UNIQUE (public_id),
+    CONSTRAINT uq_backtest_run_public_id UNIQUE (public_id),
 
     CONSTRAINT fk_backtest_run_asset FOREIGN KEY (asset_id) REFERENCES quant.asset(id)
     ON DELETE RESTRICT,
@@ -39,13 +39,13 @@ CREATE TABLE quant.backtest_run(
 
     CONSTRAINT ck_backtest_run_strategy_version_not_blank CHECK(BTRIM(strategy_version)<>''),
 
-    CONSTRAINT ck_bakctest_run_date_range CHECK (end_date > start_date),
+    CONSTRAINT ck_backtest_run_date_range CHECK (end_date > start_date),
 
     CONSTRAINT ck_backtest_run_initial_cash CHECK (initial_cash > 0),
 
-    CONSTRAINT ck_bakctest_run_param_obj CHECK (JSONB_TYPEOF(parameters) = 'object'),
+    CONSTRAINT ck_backtest_run_parameters_object CHECK (JSONB_TYPEOF(parameters) = 'object'),
 
-    CONSTRAINT ck_bakctest_run_status CHECK (
+    CONSTRAINT ck_backtest_run_status CHECK (
                                         status IN  
                                             (
                                                 'PENDING',
@@ -72,7 +72,7 @@ CREATE TABLE quant.backtest_run(
                                                         )
                                                     ),
 
-    CONSTRAINT ck_bakctest_run_status_lifecycle
+    CONSTRAINT ck_backtest_run_status_lifecycle
         CHECK 
         (
             (
