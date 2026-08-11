@@ -1,3 +1,5 @@
+from datetime import date
+from decimal import Decimal
 import os
 from collections.abc import Iterator
 from typing import Any
@@ -141,3 +143,57 @@ def unique_suffix() -> str:
     """Return a unique uppercase identifier for test rows."""
 
     return uuid4().hex[:10].upper()
+
+
+@pytest.fixture
+def completed_backtest_payload(unique_suffix:str, ) -> dict[str, Any]:
+    
+    return{
+        "asset": {
+            "exchange_code": "NYSEARCA",
+            "symbol": f"SPY{unique_suffix}",
+            "display_name": "SPDR S&P 500 ETF Trust",
+            "currency_code": "USD",
+            "asset_type": "ETF",
+        },
+        "run": {
+            "strategy_name": "BuyAndHold",
+            "strategy_version": "1.0.0",
+            "start_date": date(2024, 1, 1),
+            "end_date": date(2024, 12, 31),
+            "initial_cash": Decimal("100000.00"),
+            "parameters": {},
+            "engine_version": "integration-test",
+        },
+        "metrics": {
+            "final_value": Decimal("110000.00"),
+            "cumulative_return": Decimal("0.10"),
+            "cagr": Decimal("0.10"),
+            "max_drawdown": Decimal("0.05"),
+            "daily_sharpe": Decimal("1.20"),
+            "calmar": Decimal("2.00"),
+            "market_exposure": Decimal("0.95"),
+            "max_drawdown_duration_days": 12,
+            "average_drawdown_duration_days": Decimal("4.50"),
+        },
+        "portfolio_values": [
+            {
+                "trading_date": date(2024, 1, 2),
+                "portfolio_value": Decimal("100000.00"),
+                "market_exposure": Decimal("0.00"),
+                "drawdown": Decimal("0.00"),
+            },
+            {
+                "trading_date": date(2024, 1, 3),
+                "portfolio_value": Decimal("105000.00"),
+                "market_exposure": Decimal("0.95"),
+                "drawdown": Decimal("0.00"),
+            },
+            {
+                "trading_date": date(2024, 1, 4),
+                "portfolio_value": Decimal("103000.00"),
+                "market_exposure": Decimal("0.95"),
+                "drawdown": Decimal("0.019047619047619"),
+            },
+        ],
+    }

@@ -8,14 +8,17 @@ import pytest
 from psycopg import Connection 
 
 from src.persistence.backtest_repository import(save_completed_backtest,)
+from tests.integration.conftest import completed_backtest_payload
 
 
 pytestmark = pytest.mark.integration
+
 
 def test_save_completed_backtest_persist_full_result(
     db_connection:Connection[Any],
     unique_suffix:str,
 ) -> None:
+    # completed_backtest_payload()
     payload = {
         "asset": {
             "exchange_code": "NYSEARCA",
