@@ -6,7 +6,7 @@ class PortfolioValueAnalyzer(bt.Analyzer):
         self.values = []
 
     def next(self):
-        portfoli_value = float(
+        portfolio_value = float(
             self.strategy.broker.getvalue()
         )
 
@@ -21,16 +21,21 @@ class PortfolioValueAnalyzer(bt.Analyzer):
 
             gross_position_value += abs(position_value)
 
-        if portfoli_value > 0 :
-            exposure = (
-                gross_position_value / portfoli_value
-            )
-        else: 
-            exposure = 0.0
-
+        # if portfolio_value > 0 :
+        #     exposure = (
+        #         gross_position_value / portfolio_value
+        #     )
+        # else: 
+        #     exposure = 0.0
+        exposure = (
+            gross_position_value / portfolio_value 
+            if portfolio_value > 0 
+            else 0.0
+        )
+        
         self.values.append({
             "date": self.strategy.datetime.date(0),
-            "value": portfoli_value,
+            "value": portfolio_value,
             "exposure":exposure,
         })
 
