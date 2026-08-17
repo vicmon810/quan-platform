@@ -129,7 +129,7 @@ def db_connection(
         row_factory=dict_row,
         connect_timeout=5,
     )
-
+    connection.execute("SELECT 1;")
     try:
         yield connection
     finally:

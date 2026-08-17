@@ -141,18 +141,32 @@ def test_portfolio_value_allows_same_date_for_different_runs(
         trading_date=trading_date,
     )
 
-    row = db_connection.execute(
+    rows = db_connection.execute(
         """
-        SELECT COUNT(*) AS count
-        FROM quant.portfolio_value
-        WHERE trading_date = %(trading_date)s;
+        SELECT 
+            backtest_run_id
+        FROM 
+            quant.portfolio_value
+        WHERE
+            trading_date = %(trading_date)s
+        AND
+            backtest_run_id 
+        IN (
+            %(first_run_id)s,
+            %(second_run_id)s
+            )
+        ORDER BY 
+            backtest_run_id;
         """,
-        {"trading_date": trading_date},
-    ).fetchone()
+        {
+            "trading_date": trading_date,
+            "first_run_id":run_id,
+            "second_run_id": second_run_id,
+        },
+    ).fetchall()
 
-    assert row is not None
-    count = row["count"]
-    assert count == 2
+    actual_run_id = {row["backtest_run_id"] for row in rows}
+    assert actual_run_id == {run_id, second_run_id}
 
 
 def test_portfolio_value_rejects_missing_run(

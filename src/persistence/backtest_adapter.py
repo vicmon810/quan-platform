@@ -26,8 +26,7 @@ def to_decimal(value:int | float|Decimal) -> Decimal:
     return Decimal(str(value))
 
 def to_optional_decimal(value:int|float|Decimal) -> Decimal|None:
-    if value is None:  
-        return None
+    if value is None:  return None
     return Decimal(str(value))
 
 def build_portfolio_values(portfolio_values: list[Mapping[str,Any]])->list[dict[str,Any]]:
@@ -60,6 +59,7 @@ def build_persistence_payload(
     result: Mapping[str, Any],
     *,
     exchange_code: str,
+    symbol:str,
     display_name: str,
     currency_code: str,
     asset_type: str,
@@ -74,7 +74,7 @@ def build_persistence_payload(
         raise ValueError("portfolio_values cannot be empty")
     asset = {
         "exchange_code": exchange_code,
-        "symbol": result["ticker"],
+        "symbol": symbol,#result["ticker"],
         "display_name": display_name,
         "currency_code": currency_code,
         "asset_type": asset_type,
@@ -109,6 +109,7 @@ def build_persistence_payload(
     }
     return {
         "asset": asset,
+        "symbol":symbol,
         "run": run,
         "portfolio_values":build_portfolio_values(raw_portfolio_values),
         "metrics": metrics,

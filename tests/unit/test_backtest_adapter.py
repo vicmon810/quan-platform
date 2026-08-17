@@ -63,6 +63,7 @@ def test_build_persistence_payload_maps_asset() -> None:
         display_name="BHP Group",
         currency_code="AUD",
         asset_type="EQUITY",
+        symbol="BHP",
         initial_cash=Decimal("100000.00"),
         strategy_version="1.0.0",
         engine_version="integration-test",
@@ -137,6 +138,7 @@ def test_build_persistence_payload_maps_run() -> None:
         display_name="BHP Group",
         currency_code="AUD",
         asset_type="EQUITY",
+        symbol="BHP",
         initial_cash=Decimal("100000.00"),
         strategy_version="1.0.0",
         engine_version="integration-test",
@@ -216,6 +218,7 @@ def test_build_persistence_payload_portfolio_values() -> None:
         result=result,
         exchange_code="ASX",
         display_name="BHP Group",
+        symbol="BHP",
         currency_code="AUD",
         asset_type="EQUITY",
         initial_cash=Decimal("100000.00"),
@@ -304,6 +307,7 @@ def test_build_persistence_payload_metrics() -> None:
         result=result,
         exchange_code="ASX",
         display_name="BHP Group",
+        symbol="BHP",
         currency_code="AUD",
         asset_type="EQUITY",
         initial_cash=Decimal("100000.00"),
@@ -380,6 +384,7 @@ def test_build_persistence_payload_maps_portfolio_values_and_computes_drawdown()
         result=result,
         exchange_code="ASX",
         display_name="BHP Group",
+        symbol="BHP",
         currency_code="AUD",
         asset_type="EQUITY",
         initial_cash=Decimal("100000.00"),
@@ -481,6 +486,7 @@ def test_build_persistence_payload_reject_empty_portfolio_vales() ->None:
             exchange_code="ASX",
             currency_code="AUD",
             asset_type="EQUITY",
+            symbol="BHP",
             display_name="BHP Group",
             initial_cash=Decimal("10000.00"),
             strategy_version="1.0.0",
@@ -498,6 +504,7 @@ def test_build_persistence_payload_preserves_none_optional_metrics()->None:
                     exchange_code="ASX",
                     currency_code="AUD",
                     asset_type="EQUITY",
+                    symbol="BHP",
                     display_name="BHP Group",
                     initial_cash=Decimal("10000.00"),
                     strategy_version="1.0.0",
@@ -516,6 +523,7 @@ def test_build_persistence_palyload_does_not_modify_input_result() -> None:
          result=result,
                     exchange_code="ASX",
                     currency_code="AUD",
+                    symbol="BHP",
                     asset_type="EQUITY",
                     display_name="BHP Group",
                     initial_cash=Decimal("10000.00"),
@@ -523,3 +531,53 @@ def test_build_persistence_palyload_does_not_modify_input_result() -> None:
                     engine_version="test",
     )
     assert result == og_result
+
+
+
+def test_build_persistence_payload_separates_data_ticker_from_asset_symbol()->None:
+    result = make_valid_result()
+    result["ticker"] = "BHP.AX"
+
+    payload = backtest_adapter.build_persistence_payload(
+        result=result,
+        exchange_code="ASX",
+        symbol="BHP",
+        display_name="BHP Group",
+        currency_code="AUD",
+        asset_type="EQUITY",
+        initial_cash=Decimal("10000.00"),
+        strategy_version="1.0.0",
+        engine_version="test",
+    )
+
+    assert payload['asset']['exchange_code'] == 'ASX'
+    assert payload['asset']['symbol'] == 'BHP'
+
+
+def test_build_persistence_payload_uses_explict_asset_symbol() -> None:
+    result = make_valid_result()
+
+    result["ticker"] = "BHP.AX"
+
+    payload = backtest_adapter.build_persistence_payload(
+        result=result,
+        exchange_code="ASX",
+        symbol="BHP",
+        display_name="BHP Group",
+        currency_code="AUD",
+        asset_type="EQUITY",
+        initial_cash=Decimal("100000.00"),
+        strategy_version="1.0.0",
+        engine_version="test",
+    )
+
+    assert payload["asset"] == {
+        "exchange_code": "ASX",
+        "symbol": "BHP",
+        "display_name": "BHP Group",
+        "currency_code": "AUD",
+        "asset_type": "EQUITY",
+    }
+
+    # Adapter must not rewrite the engine result.
+    assert result["ticker"] == "BHP.AX"
