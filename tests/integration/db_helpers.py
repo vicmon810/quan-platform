@@ -14,12 +14,14 @@ def insert_asset(
     display_name: str = "Test Asset",
     currency_code: str = "USD",
     asset_type: str = "ETF",
+    data_symbol: str = "SPY_TEST",
 ) -> int:
     row = connection.execute(
         """
         INSERT INTO quant.asset (
             exchange_code,
             symbol,
+            data_symbol,
             display_name,
             currency_code,
             asset_type
@@ -27,6 +29,7 @@ def insert_asset(
         VALUES (
             %(exchange_code)s,
             %(symbol)s,
+            %(data_symbol)s,
             %(display_name)s,
             %(currency_code)s,
             %(asset_type)s
@@ -36,6 +39,7 @@ def insert_asset(
         {
             "exchange_code": exchange_code,
             "symbol": symbol,
+            "data_symbol":data_symbol,
             "display_name": display_name,
             "currency_code": currency_code,
             "asset_type": asset_type,

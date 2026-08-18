@@ -2,7 +2,6 @@ CREATE SCHEMA IF NOT EXISTS quant;
 
 CREATE TABLE quant.asset (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
-
     exchange_code VARCHAR(16) NOT NULL,
     symbol VARCHAR(32) NOT NULL,
     display_name VARCHAR(255) NOT NULL,
@@ -12,20 +11,51 @@ CREATE TABLE quant.asset (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT pk_asset PRIMARY KEY (id),
-    CONSTRAINT uq_asset_exchange_symbol UNIQUE (exchange_code, symbol),
-    CONSTRAINT ck_asset_exchange_code_not_blank CHECK(BTRIM(exchange_code)<>''),
-    CONSTRAINT ck_asset_exchange_code_uppercase CHECK(exchange_code = UPPER(exchange_code)),
-    CONSTRAINT ck_asset_symbol_not_blank CHECK(BTRIM(symbol)<> ''), 
-    CONSTRAINT ck_asset_symbol_uppercase CHECK (symbol = UPPER(symbol)),
-    CONSTRAINT ck_asset_display_name_not_blank CHECK (BTRIM(display_name) <> ''),
-    CONSTRAINT ck_asset_currency_code CHECK (currency_code ~ '[A-Z]{3}$'),
-    CONSTRAINT ck_asset_type CHECK (asset_type IN ('EQUITY', 'ETF'))
+    CONSTRAINT 
+        pk_asset 
+    PRIMARY KEY 
+    (id),
+    
+    CONSTRAINT
+        uq_asset_exchange_symbol 
+    UNIQUE 
+        (exchange_code, symbol),
+
+    CONSTRAINT
+        ck_asset_exchange_code_not_blank 
+    CHECK
+        (BTRIM(exchange_code)<>''),
+    
+    CONSTRAINT 
+        ck_asset_exchange_code_uppercase 
+    CHECK
+        (exchange_code = UPPER(exchange_code)),
+    CONSTRAINT 
+        ck_asset_symbol_not_blank 
+    CHECK
+        (BTRIM(symbol)<> ''), 
+    CONSTRAINT 
+        ck_asset_symbol_uppercase 
+    CHECK 
+        (symbol = UPPER(symbol)),
+    CONSTRAINT 
+        ck_asset_display_name_not_blank 
+    CHECK 
+        (BTRIM(display_name) <> ''),
+    CONSTRAINT 
+        ck_asset_currency_code 
+    CHECK 
+        (currency_code ~ '[A-Z]{3}$'),
+    CONSTRAINT 
+        ck_asset_type 
+    CHECK 
+        (asset_type IN ('EQUITY', 'ETF'))
 );
 
 CREATE INDEX idx_asset_symbol ON quant.asset(symbol);
 
-CREATE FUNCTION quant.set_updated_at() 
+CREATE FUNCTION 
+    quant.set_updated_at() 
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$

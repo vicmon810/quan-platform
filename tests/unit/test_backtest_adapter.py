@@ -72,6 +72,7 @@ def test_build_persistence_payload_maps_asset() -> None:
     assert payload["asset"] == {
         "exchange_code": "ASX",
         "symbol": "BHP",
+        "data_symbol":"BHP",
         "display_name": "BHP Group",
         "currency_code": "AUD",
         "asset_type": "EQUITY",
@@ -574,6 +575,7 @@ def test_build_persistence_payload_uses_explict_asset_symbol() -> None:
     assert payload["asset"] == {
         "exchange_code": "ASX",
         "symbol": "BHP",
+        "data_symbol":"BHP.AX",
         "display_name": "BHP Group",
         "currency_code": "AUD",
         "asset_type": "EQUITY",

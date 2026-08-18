@@ -23,6 +23,7 @@ def test_save_completed_backtest_persist_full_result(
         "asset": {
             "exchange_code": "NYSEARCA",
             "symbol": f"SPY{unique_suffix}",
+            "data_symbol": f"SPY{unique_suffix}",
             "display_name": "SPDR S&P 500 ETF Trust",
             "currency_code": "USD",
             "asset_type": "ETF",

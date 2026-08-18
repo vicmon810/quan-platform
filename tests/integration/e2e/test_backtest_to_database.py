@@ -42,6 +42,7 @@ def test_backtest_runs_and_persists_to_database(
     payload = build_persistence_payload(
         result=result,
         exchange_code="TEST",
+        symbol="E2E_TEST",
         display_name="E2E Test Asset",
         currency_code="USD",
         asset_type="EQUITY",
@@ -156,3 +157,6 @@ def test_backtest_runs_and_persists_to_database(
     assert portfolio_summary[
         "last_date"
     ] == run["end_date"]
+
+
+

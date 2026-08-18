@@ -152,6 +152,7 @@ def completed_backtest_payload(unique_suffix:str, ) -> dict[str, Any]:
         "asset": {
             "exchange_code": "NYSEARCA",
             "symbol": f"SPY{unique_suffix}",
+            "data_symbol": "SPY",
             "display_name": "SPDR S&P 500 ETF Trust",
             "currency_code": "USD",
             "asset_type": "ETF",

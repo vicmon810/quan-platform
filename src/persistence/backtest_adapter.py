@@ -75,6 +75,7 @@ def build_persistence_payload(
     asset = {
         "exchange_code": exchange_code,
         "symbol": symbol,#result["ticker"],
+        "data_symbol":result["ticker"],
         "display_name": display_name,
         "currency_code": currency_code,
         "asset_type": asset_type,
@@ -110,7 +111,10 @@ def build_persistence_payload(
     return {
         "asset": asset,
         "symbol":symbol,
+        # "data_symbol": result["ticker"],
         "run": run,
         "portfolio_values":build_portfolio_values(raw_portfolio_values),
         "metrics": metrics,
     }
+
+

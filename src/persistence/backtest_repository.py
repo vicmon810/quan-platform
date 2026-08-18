@@ -75,6 +75,7 @@ def _upsert_asset(
                 (
                     exchange_code,
                     symbol,
+                    data_symbol,
                     display_name,
                     currency_code,
                     asset_type
@@ -83,6 +84,7 @@ def _upsert_asset(
                 (
                     %(exchange_code)s,
                     %(symbol)s,
+                    %(data_symbol)s,
                     %(display_name)s,
                     %(currency_code)s,
                     %(asset_type)s
@@ -93,6 +95,7 @@ def _upsert_asset(
                     symbol
                 )
             DO UPDATE SET 
+                data_symbol = EXCLUDED.data_symbol,
                 display_name = EXCLUDED.display_name,
                 currency_code = EXCLUDED.currency_code,
                 asset_type = EXCLUDED.asset_type
@@ -101,6 +104,7 @@ def _upsert_asset(
         {
             "exchange_code": asset["exchange_code"],
             "symbol": asset["symbol"],
+            "data_symbol": asset["data_symbol"],
             "display_name": asset["display_name"],
             "currency_code": asset["currency_code"],
             "asset_type":asset["asset_type"],

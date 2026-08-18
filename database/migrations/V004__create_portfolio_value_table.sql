@@ -1,33 +1,35 @@
 CREATE TABLE IF NOT EXISTS quant.portfolio_value(
     backtest_run_id BIGINT NOT NULL,
     trading_date DATE NOT NULL, 
-
     portfolio_value NUMERIC(20,6) NOT NULL, 
     market_exposure NUMERIC(30,15) NOT NULL, 
     drawdown NUMERIC(30,15) NOT NULL,
-
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_portfolio_value_backtest_run
-    FOREIGN KEY (backtest_run_id)
-    REFERENCES quant.backtest_run(id)
+    CONSTRAINT 
+        fk_portfolio_value_backtest_run
+    FOREIGN KEY
+         (backtest_run_id)
+    REFERENCES 
+        quant.backtest_run(id)
     ON DELETE CASCADE,
+    CONSTRAINT 
+        ck_portfolio_value_positive
+    CHECK 
+        (portfolio_value > 0 AND portfolio_value <> 'NaN'::NUMERIC),
 
-    CONSTRAINT ck_portfolio_value_positive
-    CHECK (portfolio_value > 0 
-    AND portfolio_value <> 'NaN'::NUMERIC),
+    CONSTRAINT 
+        ck_portfolio_value_market_exposure
+    CHECK
+    (market_exposure >= 0 AND market_exposure <> 'NaN'::NUMERIC),
+    CONSTRAINT 
+        ck_portfolio_value_drawdown CHECK (drawdown >= 0 AND drawdown <=1
+        AND drawdown <> 'NaN'::NUMERIC),
 
-    CONSTRAINT ck_portfolio_value_market_exposure
-    CHECK( market_exposure >= 0
-    AND market_exposure <> 'NaN'::NUMERIC),
-
-    CONSTRAINT ck_portfolio_value_drawdown
-    CHECK (drawdown >= 0
-    AND drawdown <=1
-    AND drawdown <> 'NaN'::NUMERIC),
-
-    CONSTRAINT uq_portfolio_value_run_date
-    UNIQUE (backtest_run_id, trading_date)
+    CONSTRAINT 
+        uq_portfolio_value_run_date
+    UNIQUE 
+        (backtest_run_id, trading_date)
 );
 
 COMMENT ON TABLE quant.portfolio_value IS
@@ -50,3 +52,4 @@ COMMENT ON COLUMN quant.portfolio_value.drawdown IS
 
 COMMENT ON COLUMN quant.portfolio_value.created_at IS
     'Timestamp when this result row was persisted.';
+    

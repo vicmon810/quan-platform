@@ -1,81 +1,97 @@
 CREATE TABLE quant.backtest_metric (
     backtest_run_id BIGINT NOT NULL,
-
     final_value NUMERIC(20, 6) NOT NULL,
-
     cumulative_return NUMERIC(30, 15) NOT NULL,
     cagr NUMERIC(30, 15) NOT NULL,
     max_drawdown NUMERIC(30, 15) NOT NULL,
-
     daily_sharpe NUMERIC(30, 15),
     calmar NUMERIC(30, 15),
-
     market_exposure NUMERIC(30, 15) NOT NULL,
-
     max_drawdown_duration_days INTEGER NOT NULL,
     average_drawdown_duration_days NUMERIC(20, 6) NOT NULL,
+    calculated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    calculated_at TIMESTAMPTZ NOT NULL
-        DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT 
+        pk_backtest_metric
+    PRIMARY KEY 
+        (backtest_run_id),
 
-    CONSTRAINT pk_backtest_metric
-        PRIMARY KEY (backtest_run_id),
+    CONSTRAINT 
+        fk_backtest_metric_run
+    FOREIGN KEY 
+        (backtest_run_id)
+    REFERENCES 
+        quant.backtest_run (id)
+    ON DELETE CASCADE,
 
-    CONSTRAINT fk_backtest_metric_run
-        FOREIGN KEY (backtest_run_id)
-        REFERENCES quant.backtest_run (id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT ck_backtest_metric_final_value
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_final_value
+    CHECK 
+        (
             final_value > 0
             AND final_value <> 'NaN'::NUMERIC
         ),
 
-    CONSTRAINT ck_backtest_metric_cumulative_return
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_cumulative_return
+    CHECK 
+        (
             cumulative_return > -1
             AND cumulative_return <> 'NaN'::NUMERIC
         ),
 
-    CONSTRAINT ck_backtest_metric_cagr
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_cagr
+    CHECK  
+        (
             cagr > -1
             AND cagr <> 'NaN'::NUMERIC
         ),
 
-    CONSTRAINT ck_backtest_metric_max_drawdown
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_max_drawdown
+    CHECK 
+        (
             max_drawdown >= 0
             AND max_drawdown <= 1
             AND max_drawdown <> 'NaN'::NUMERIC
         ),
 
-    CONSTRAINT ck_backtest_metric_daily_sharpe
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_daily_sharpe
+    CHECK
+        (
             daily_sharpe IS NULL
             OR daily_sharpe <> 'NaN'::NUMERIC
         ),
 
-    CONSTRAINT ck_backtest_metric_calmar
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_calmar
+    CHECK 
+        (
             calmar IS NULL
             OR calmar <> 'NaN'::NUMERIC
         ),
 
-    CONSTRAINT ck_backtest_metric_market_exposure
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_market_exposure
+    CHECK 
+        (
             market_exposure >= 0
             AND market_exposure <> 'NaN'::NUMERIC
         ),
 
-    CONSTRAINT ck_backtest_metric_max_duration
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_max_duration
+    CHECK 
+        (
             max_drawdown_duration_days >= 0
         ),
 
-    CONSTRAINT ck_backtest_metric_average_duration
-        CHECK (
+    CONSTRAINT 
+        ck_backtest_metric_average_duration
+    CHECK 
+        (
             average_drawdown_duration_days >= 0
             AND average_drawdown_duration_days
                 <= max_drawdown_duration_days
