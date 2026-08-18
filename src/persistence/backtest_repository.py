@@ -361,3 +361,72 @@ def _mark_run_completed(
         row = cursor.fetchone()
     if row is None:
         raise RuntimeError("backtest run could not transtition from RUNNING to COMPLETED")
+
+
+def claim_pending_backtest(
+        connection : Connection[Any],
+) -> None| dict[str, Any]:
+    """
+    claim the oldest pending backtest job
+    the selected job is locked and transitioned from PENDING
+    to RUNNING atomically. locked jobs are skipped so mutiple
+    workers can safely claim different jobs
+    """
+    
+    row = connection.execute(
+        """
+        WITH 
+            candidate
+        AS(
+        SELECT
+            id
+        FROM 
+            quant.backtest_run
+        WHERE
+            status = 'PENDING'
+        ORDER BY 
+            created_at ASC,
+            id ASC
+        FOR UPDATE SKIP LOCKED LIMIT 1
+        ),
+        claimed AS(
+            UPDATE 
+                quant.backtest_run as br 
+            SET 
+                status = 'RUNNING',
+                started_at = CURRENT_TIMESTAMP
+            FROM
+                candidate
+            WHERE
+                br.id = candidate.id
+            RETURNING
+                br.id AS run_id,
+                br.public_id,
+                br.asset_id,
+                br.strategy_name,
+                br.parameters,
+                br.start_date,
+                br.end_date,
+                br.initial_cash
+        )
+        SELECT 
+            claimed.run_id,
+            claimed.public_id,
+            asset.data_symbol,
+            claimed.strategy_name,
+            claimed.parameters,
+            claimed.start_date,
+            claimed.end_date,
+            claimed.initial_cash
+        FROM
+            claimed
+        JOIN
+            quant.asset 
+        AS 
+            asset
+        ON
+            asset.id = claimed.asset_id;
+        """
+    ).fetchone()
+
+    return row
