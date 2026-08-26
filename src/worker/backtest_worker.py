@@ -9,6 +9,8 @@ from src.persistence.backtest_repository import (complete_backtest_run,
                                                 claim_pending_backtest)
 from strategies.buy_n_hold import BuyAndHold
 
+import time
+
 STRATEGIES = {"BuyAndHold": BuyAndHold}
 
 def execute_backtest_job(
@@ -65,3 +67,18 @@ def process_next_job(
         job=job
     )
     return True
+
+def run_worker(
+            connection: Connection[Any],
+            *,
+            poll_interval_seconds:float =1.0,
+) -> None:
+      while True:
+            processed = process_next_job(
+                  connection=connection,
+            )
+
+            if not processed:
+                  time.sleep(
+                        poll_interval_seconds
+                  )
