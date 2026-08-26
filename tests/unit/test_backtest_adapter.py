@@ -583,3 +583,35 @@ def test_build_persistence_payload_uses_explict_asset_symbol() -> None:
 
     # Adapter must not rewrite the engine result.
     assert result["ticker"] == "BHP.AX"
+
+def test_build_backtest_ouktput_map_metrics_and_portfolio_values() -> None:
+    result = make_valid_result()
+
+    output = backtest_adapter.build_backtest_output(result)
+
+    assert output["metrics"] == {
+        "final_value": Decimal("110000.0"),
+        "cumulative_return": Decimal("0.1"),
+        "cagr": Decimal("0.1"),
+        "max_drawdown": Decimal("0.05"),
+        "daily_sharpe": Decimal("1.2"),
+        "calmar":Decimal("2.0"),
+        "market_exposure": Decimal("0.8"),
+        "max_drawdown_duration_days":12,
+        "average_drawdown_duration_days": Decimal("4.5"),
+    }
+
+
+    assert output["portfolio_values"][0] == {
+        "trading_date": date(2024, 1, 2),
+        "portfolio_value": Decimal("100000.0"),
+        "market_exposure": Decimal("0.0"),
+        "drawdown": Decimal("0"),
+    }
+
+    assert output["portfolio_values"][-1] == {
+            "trading_date": date(2024, 12, 31),
+            "portfolio_value": Decimal("110000.0"),
+            "market_exposure": Decimal("0.95"),
+            "drawdown": Decimal("0"),
+        }

@@ -8,6 +8,8 @@ from psycopg import Connection
 from src.persistence import backtest_repository
 from psycopg.rows import dict_row
 from uuid import uuid4
+from src.domain.backtest_job import BacktestJob
+
 unique_suffix = uuid4().hex[:8].upper()
 symbol = f"WT{unique_suffix}"
 data_symbol = f"{symbol}.AX"
@@ -128,14 +130,14 @@ def test_claim_pending_backtest_claims_oldest_pending_job(
 
     assert job is not None 
 
-    assert job['run_id'] == oldest['id']
-    assert job["public_id"] == oldest["public_id"]
-    assert job["data_symbol"] == "BHP.AX"
-    assert job["strategy_name"] == "BuyAndHold"
-    assert job["parameters"] == {}
-    assert job["start_date"] == date(2020, 1, 1)
-    assert job["end_date"] == date(2025, 1, 1)
-    assert job["initial_cash"] == Decimal("10000.000000")
+    assert job.run_id == oldest['id']
+    assert job.public_id == oldest["public_id"]
+    assert job.data_symbol == "BHP.AX"
+    assert job.strategy_name == "BuyAndHold"
+    assert job.parameters == {}
+    assert job.start_date == date(2020, 1, 1)
+    assert job.end_date == date(2025, 1, 1)
+    assert job.initial_cash == Decimal("10000.000000")
 
     statuses = db_connection.execute(
         """
@@ -325,10 +327,10 @@ def test_claim_pending_backtest_skips_job_locked_by_another_worker() -> None:
         assert job_a is not None
         assert job_b is not None 
 
-        assert job_a['run_id'] == oldest['id']
-        assert job_b['run_id'] == second['id']
+        assert job_a.run_id == oldest['id']
+        assert job_b.run_id == second['id']
 
-        assert job_b['run_id'] != job_a['run_id']
+        assert job_b.run_id != job_a.run_id
         
     finally:
         worker_a.rollback()
