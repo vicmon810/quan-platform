@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
 
 
 import org.springframework.stereotype.Service;
@@ -46,5 +47,23 @@ public class BacktestService {
             initialCash,
             parameters
         );
+    }
+
+    public BacktestSummary getBacktest(UUID publicId){
+        return repository
+                .findSummaryByPublicId(publicId)    
+                .orElseThrow(
+                    () -> new BacktestNotFoundException(
+                        publicId
+                    )
+                );
+    }
+
+    public List<PortfolioValuePoint> getPortfolioValues(UUID publicId){
+        repository.findSummaryByPublicId(publicId)
+        .orElseThrow( 
+            () ->  new BacktestNotFoundException(publicId)
+        );
+        return repository.findPortfolioValuesByPublicId(publicId);
     }
 }

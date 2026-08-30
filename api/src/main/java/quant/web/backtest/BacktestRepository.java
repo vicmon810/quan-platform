@@ -3,6 +3,7 @@ package quant.web.backtest;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -184,5 +185,40 @@ public class BacktestRepository {
             publicId
         ).stream()
         .findFirst();
+    }
+
+    public List<PortfolioValuePoint> findPortfolioValuesByPublicId(
+        UUID publicId
+    ){
+        String sql = """
+                SELECT 
+                    pv.trading_date,
+                    pv.portfolio_value,
+                    pv.market_exposure,
+                    pv.drawdown
+                FROM
+                    quant.portfolio_value pv
+                JOIN
+                    quant.backtest_run br 
+                ON
+                    br.id = pv.backtest_run_id
+                WHERE
+                    br.public_id = ?
+                ORDER BY 
+                    pv.trading_date ASC
+                """;
+
+        return jdbcTemplate.query(
+            sql,
+            (resultSet, rowNumber) -> (
+                new PortfolioValuePoint(
+                resultSet.getObject("trading_date", LocalDate.class),
+                resultSet.getBigDecimal("portfolio_value"),
+                resultSet.getBigDecimal("market_exposure"),
+                resultSet.getBigDecimal("drawdown")
+                )
+            ),
+        publicId
+        );
     }
 }

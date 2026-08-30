@@ -339,4 +339,121 @@ class  BacktestRepositoryIntegrationTest{
             assertThat(summary.metrics()).isNull();
 
     }
+
+    @Test
+void findPortfolioValuesByPublicIdReturnsValuesOrderedByTradingDate() {
+    Long assetId = jdbcTemplate.queryForObject(
+        """
+        INSERT INTO quant.asset (
+            exchange_code,
+            symbol,
+            data_symbol,
+            display_name,
+            currency_code,
+            asset_type
+        )
+        VALUES (
+            'NASDAQ_R',
+            'AAPL_R',
+            'AAPL_R',
+            'Apple Inc.',
+            'USD',
+            'EQUITY'
+        )
+        RETURNING id
+        """,
+        Long.class
+    );
+
+    UUID publicId = jdbcTemplate.queryForObject(
+        """
+        INSERT INTO quant.backtest_run (
+            asset_id,
+            strategy_name,
+            strategy_version,
+            start_date,
+            end_date,
+            initial_cash,
+            parameters,
+            status,
+            started_at,
+            completed_at
+        )
+        VALUES (
+            ?,
+            'BuyAndHold',
+            '1.0.0',
+            DATE '2020-01-01',
+            DATE '2025-01-01',
+            10000.00,
+            '{}'::jsonb,
+            'COMPLETED',
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+        RETURNING public_id
+        """,
+        UUID.class,
+        assetId
+    );
+
+    Long runId = jdbcTemplate.queryForObject(
+        """
+        SELECT id
+        FROM quant.backtest_run
+        WHERE public_id = ?
+        """,
+        Long.class,
+        publicId
+    );
+
+    jdbcTemplate.update(
+        """
+        INSERT INTO quant.portfolio_value (
+            backtest_run_id,
+            trading_date,
+            portfolio_value,
+            market_exposure,
+            drawdown
+        )
+        VALUES
+            (?, DATE '2020-01-03', 10100.00, 0.95, 0.01),
+            (?, DATE '2020-01-02', 10000.00, 0.00, 0.00)
+        """,
+        runId,
+        runId
+    );
+
+    var values =
+        repository.findPortfolioValuesByPublicId(publicId);
+
+    assertThat(values)
+        .hasSize(2);
+
+    assertThat(values.get(0).date())
+        .isEqualTo(LocalDate.of(2020, 1, 2));
+
+    assertThat(values.get(0).value())
+        .isEqualByComparingTo(
+            new BigDecimal("10000.00")
+        );
+
+    assertThat(values.get(0).marketExposure())
+        .isEqualByComparingTo(
+            new BigDecimal("0.00")
+        );
+
+    assertThat(values.get(0).drawdown())
+        .isEqualByComparingTo(
+            new BigDecimal("0.00")
+        );
+
+    assertThat(values.get(1).date())
+        .isEqualTo(LocalDate.of(2020, 1, 3));
+
+    assertThat(values.get(1).value())
+        .isEqualByComparingTo(
+            new BigDecimal("10100.00")
+        );
+}
 }
