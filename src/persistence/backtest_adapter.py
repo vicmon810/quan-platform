@@ -97,6 +97,20 @@ def build_persistence_payload(
         "engine_version": engine_version,
     }
 
+    output = build_backtest_output(result=result)
+    return {
+        "asset": asset,
+        "symbol":symbol,
+        # "data_symbol": result["ticker"],
+        "run": run,
+        "portfolio_values": output["portfolio_values"],
+        "metrics": output['metrics'],
+    }
+
+
+def build_backtest_output(
+    result: Mapping[str, Any],
+) -> dict[str, Any]:
     metrics = {
         "final_value": to_decimal(result["final_value"]),
         "cumulative_return": to_decimal(result["cumulative_return"]),
@@ -105,16 +119,19 @@ def build_persistence_payload(
         "daily_sharpe": to_optional_decimal(result["daily_sharpe"]),
         "calmar": to_optional_decimal(result["calmar"]),
         "market_exposure": to_decimal(result["market_exposure"]),
-        "max_drawdown_duration_days": to_decimal(result["max_drawdown_duration_days"]),
-        "average_drawdown_duration_days": to_optional_decimal(result["average_drawdown_duration_days"])
+        "max_drawdown_duration_days": int(
+            result["max_drawdown_duration_days"]
+        ),
+        "average_drawdown_duration_days": to_decimal(
+            result["average_drawdown_duration_days"]
+        ),
     }
+
+    portfolio_values = build_portfolio_values(
+        result["portfolio_values"]
+    )
+
     return {
-        "asset": asset,
-        "symbol":symbol,
-        # "data_symbol": result["ticker"],
-        "run": run,
-        "portfolio_values":build_portfolio_values(raw_portfolio_values),
         "metrics": metrics,
+        "portfolio_values": portfolio_values,
     }
-
-

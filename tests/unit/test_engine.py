@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 import numpy as np 
 
-from src.engine import run_single, run_multipl
+from src.engine.engine import run_single, run_multipl
 from strategies.buy_n_hold import BuyAndHold
 from strategies.time_serise_momentum import TimeSeriseMomentum
 

@@ -16,4 +16,6 @@ reports/
 # IDE
 .vscode/
 .idea/
-notes.worktrees/
+notes
+.worktrees/
+

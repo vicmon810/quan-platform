@@ -1,6 +1,6 @@
 import pandas as pd
 import sys
-from src import reporting
+from src.helper import reporting
 import pytest
 RESULTS = [
         {

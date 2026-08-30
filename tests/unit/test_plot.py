@@ -1,8 +1,8 @@
 from datetime import date 
 import pytest 
 import sys
-from src.plotting import build_drawdown_frame 
-from src.plotting import plot_drawdown_curves
+from src.helper.plotting import build_drawdown_frame 
+from src.helper.plotting import plot_drawdown_curves
 
 def test_build_drawdown_frame():
     results = [

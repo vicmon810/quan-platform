@@ -6,7 +6,7 @@ from psycopg import Connection
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from collections.abc import Mapping
-
+from src.domain.backtest_job import BacktestJob
 
 def save_completed_backtest(
         connection: Connection[Any],
@@ -365,7 +365,7 @@ def _mark_run_completed(
 
 def claim_pending_backtest(
         connection : Connection[Any],
-) -> None| dict[str, Any]:
+) -> None| BacktestJob:
     """
     claim the oldest pending backtest job
     the selected job is locked and transitioned from PENDING
@@ -429,4 +429,90 @@ def claim_pending_backtest(
         """
     ).fetchone()
 
-    return row
+    if row is not None: 
+        return BacktestJob(
+            run_id = row["run_id"],
+            public_id = row["public_id"],
+            data_symbol=row["data_symbol"],
+            strategy_name=row["strategy_name"],
+            parameters = row["parameters"],
+            start_date = row["start_date"],
+            end_date = row["end_date"],
+            initial_cash=row["initial_cash"],
+        )
+    else:
+        return None
+
+
+def complete_backtest_run(
+    connection : Connection[Any],
+    *,
+    run_id:int,
+    metrics:Mapping[str, Any],
+    portfolio_values: list[Mapping[str,Any]]
+) -> None| dict[str, Any]:
+    _insert_backtest_metric(
+        connection=connection,
+        run_id=run_id,
+        metrics=metrics
+    )
+    _insert_portfolio_values(
+        connection=connection,
+        run_id=run_id,
+        portfolio_values=portfolio_values
+    )
+    _mark_run_completed(
+        connection=connection,
+        run_id=run_id
+    )
+
+def fail_backtest_run(
+        connection: Connection[Any],
+        *,
+        run_id:int,
+        error_message: str,
+) -> None:
+    connection.execute(
+        """
+        UPDATE
+            quant.backtest_run
+        SET
+            status = 'FAILED',
+            completed_at = CURRENT_TIMESTAMP,
+            error_message = %(error_message)s
+        WERHE
+            id = %(run_id)s
+        AND
+            status = 'RUNNING';
+        """,
+        {
+            "run_id": run_id,
+            "error_message": error_message,
+        }
+    )
+
+
+def fail_backtest_run(
+        connection: Connection[Any],
+        *,
+        run_id : int, 
+        error_message: str,
+) -> None:
+    connection.execute(
+        """
+        UPDATE 
+            quant.backtest_run
+        SET
+            status = 'FAILED',
+            completed_at = CURRENT_TIMESTAMP,
+            error_message = %(error_message)s
+        WHERE
+            id = %(run_id)s
+        AND
+            status  = 'RUNNING';
+        """,
+        {
+            "error_message": error_message,
+            "run_id": run_id,
+        },
+    )

@@ -5,7 +5,7 @@ from uuid import UUID
 import pytest
 from psycopg import Connection
 
-from src.engine import run_single
+from src.engine.engine import run_single
 from src.persistence.backtest_adapter import (
     build_persistence_payload,
 )
