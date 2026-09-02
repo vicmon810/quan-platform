@@ -31,11 +31,24 @@ export interface BacktestMetrics {
 export interface BacktestSummary{
     publicId:string 
     status: BacktestStatus 
-    exchagneCode: string 
+    exchangeCode: string 
     symbol: string
     strategyName: string 
-    stratDate:string 
+    startDate:string 
     endDate: string 
     initialCash: number 
     metrics: BacktestMetrics | null
 }
+
+export interface PortfolioValuePoint{
+    date: string,
+    value: number
+    marketExposure: number
+    drawdown: number
+}
+
+export interface PortfolioValueResponse{
+    publicId:string
+    values: PortfolioValuePoint[]
+}
+

@@ -1,21 +1,23 @@
-import {  useState } from "react";
+// import {  useState } from "react";
 
-import { createBacktest} from './api/backtestApi'
+// import { createBacktest} from './api/backtestApi'
 import { BacktestForm } from "./components/BacktestForm";
-
-import type { 
-    BacktestStatus,
-    CreateBacktestRequest
-} from "./model/types";
+import { useBacktest } from "./hooks/useBacktest";
+import { EquityCurve } from "./components/EquityCurve";
+// import type { 
+//     BacktestStatus,
+//     CreateBacktestRequest
+// } from "./model/types";
 
 export function BacktestPage() {
-    const [status, setStatus] = useState<BacktestStatus | null>(null)
+    // const [status, setStatus] = useState<BacktestStatus | null>(null)
     
-    async function handleSubmit(request:CreateBacktestRequest) {
-        const response = await createBacktest(request)
+    // async function handleSubmit(request:CreateBacktestRequest) {
+    //     const response = await createBacktest(request)
 
-        setStatus(response.status)
-    }
+    //     setStatus(response.status)
+    // }
+    const {status, portfolioValues,submit} = useBacktest()
 
     return(
         <section className="space-y-8">
@@ -29,7 +31,7 @@ export function BacktestPage() {
             </div>
 
             <div className="max-w-xl">
-                <BacktestForm onSubmit={handleSubmit}/>
+                <BacktestForm onSubmit={submit}/>
             </div>
             {status !== null &&(
                 <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
