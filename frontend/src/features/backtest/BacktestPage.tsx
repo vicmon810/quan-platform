@@ -2,7 +2,7 @@ import { BacktestForm } from './components/BacktestForm'
 import { EquityCurve } from './components/EquityCurve'
 import { MetricsPanel } from './components/MetricsPanel'
 import { useBacktest } from './hooks/useBacktest'
-
+import { BacktestHeader } from './components/BacktestHeader'
 
 export function BacktestPage() {
   const {
@@ -31,9 +31,18 @@ export function BacktestPage() {
       )}
 
       {summary?.metrics && (
-        <MetricsPanel
-          metrics={summary.metrics}
-        />
+        // <MetricsPanel
+        //   metrics={summary.metrics}
+        // />
+        <BacktestHeader
+        symbol={summary.symbol}
+        exchangeCode={summary.exchangeCode}
+        strategyName={summary.strategyName}
+        status={summary.status}
+        startDate={summary.startDate}
+        endDate={summary.endDate}
+        initialCash={summary.initialCash}
+        finalValue={summary.metrics.finalValue}/>
       )}
 
       {status !== null && (
