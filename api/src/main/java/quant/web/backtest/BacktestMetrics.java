@@ -10,7 +10,7 @@ public record  BacktestMetrics
     BigDecimal cumulativeReturn,
     BigDecimal cagr,
     BigDecimal maxDrawdown,
-    BigDecimal dailySharp,
+    BigDecimal dailySharpe,
     BigDecimal calmar){
 
     }
