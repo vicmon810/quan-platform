@@ -1,45 +1,52 @@
-// import {  useState } from "react";
+import { BacktestForm } from './components/BacktestForm'
+import { EquityCurve } from './components/EquityCurve'
+import { MetricsPanel } from './components/MetricsPanel'
+import { useBacktest } from './hooks/useBacktest'
 
-// import { createBacktest} from './api/backtestApi'
-import { BacktestForm } from "./components/BacktestForm";
-import { useBacktest } from "./hooks/useBacktest";
-import { EquityCurve } from "./components/EquityCurve";
-// import type { 
-//     BacktestStatus,
-//     CreateBacktestRequest
-// } from "./model/types";
 
 export function BacktestPage() {
-    // const [status, setStatus] = useState<BacktestStatus | null>(null)
-    
-    // async function handleSubmit(request:CreateBacktestRequest) {
-    //     const response = await createBacktest(request)
+  const {
+    status,
+    summary,
+    portfolioValues,
+    submit,
+  } = useBacktest()
 
-    //     setStatus(response.status)
-    // }
-    const {status, portfolioValues,submit} = useBacktest()
+  return (
+    <section className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-semibold">
+          Run Backtest
+        </h2>
 
-    return(
-        <section className="space-y-8">
-            <div>
-                <h2 className="text-2xl font-semibold">
-                Run Backtest
-                </h2>
-                <p className="mt-2 text-sm text-slate-400">
-                    Test a strategy against historyical market data.
-                </p>
-            </div>
+        <p className="mt-2 text-sm text-slate-400">
+          Test a strategy against historical market data.
+        </p>
+      </div>
 
-            <div className="max-w-xl">
-                <BacktestForm onSubmit={submit}/>
-            </div>
-            {status !== null &&(
-                <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-                        <p className="text-sm text-slate-300">
-                            Status: {status}
-                        </p>
-                </div>
-            )}
-        </section>
-    )
+      {portfolioValues.length > 0 && (
+        <EquityCurve
+          values={portfolioValues}
+        />
+      )}
+
+      {summary?.metrics && (
+        <MetricsPanel
+          metrics={summary.metrics}
+        />
+      )}
+
+      {status !== null && (
+        <div className="text-sm text-slate-400">
+          Status: {status}
+        </div>
+      )}
+
+      <div className="max-w-xl">
+        <BacktestForm
+          onSubmit={submit}
+        />
+      </div>
+    </section>
+  )
 }

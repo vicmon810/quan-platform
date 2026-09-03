@@ -1,6 +1,6 @@
 import {
     CartesianGrid,
-    CreateianGrid,
+
     Line, 
     LineChart,
     ResponsiveContainer,
@@ -10,7 +10,6 @@ import {
 } from 'recharts'
 
 import type {
-    PorfolioValuePoint,
     PortfolioValuePoint
 } from '../model/types'
 

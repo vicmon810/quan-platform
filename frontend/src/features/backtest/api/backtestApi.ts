@@ -39,7 +39,7 @@ export async function getBacktest(publicId:string):Promise<BacktestSummary> {
 
 export async function getPortfolioValues(publicId:string):Promise<PortfolioValueResponse> {
     const response = await fetch(
-        `/api/backtest/${publicId}/portfolio-values`,
+        `/api/backtests/${publicId}/portfolio-values`,
     )
 
     if(!response.ok){
