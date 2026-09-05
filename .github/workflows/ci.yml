@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    evn: 
+    env: 
       POSTGRES_DB: quant_platform_test
       POSTGRES_USER: quant_app
       POSTGRES_PASSWORD: q123456
@@ -62,4 +62,38 @@ jobs:
 
       - name: Tear down Postgres
         if: always()
+        run: docker compose down -v
+
+
+  java:
+    name: Java CI
+    runs-on: ubuntu-latest 
+    timeout-minutes: 10 
+
+    env: 
+        POSTGRES_DB: quant_platform_test
+        POSTGRES_USER: quant_app
+        POSTGRES_PASSWORD: q123456
+        POSTGRES_PORT: 5432
+        DATABASE_JDBC_URL: jdbc:postgresql://localhost:5432/quant_platform_test
+        DATABASE_USER: quant_app
+        DATABASE_PASSWORD: q123456
+      
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v6
+        with: 
+            distribution: temurin
+            java-version: "21"
+            cache: maven
+            cache-dependency-path: api/pom.xml
+
+      - run: docker compose up -d --wait postgres
+
+      - run: docker compose --profile tools run --rm flyway migrate 
+
+      - run: ./mvnw -B test
+        working-directory: api
+
+      - if: always()
         run: docker compose down -v
