@@ -1,6 +1,6 @@
 import { BacktestForm } from './components/BacktestForm'
 import { EquityCurve } from './components/EquityCurve'
-import { MetricsPanel } from './components/MetricsPanel'
+// import { MetricsPanel } from './components/MetricsPanel'
 import { useBacktest } from './hooks/useBacktest'
 import { BacktestHeader } from './components/BacktestHeader'
 

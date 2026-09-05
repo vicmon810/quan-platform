@@ -4,7 +4,7 @@ import type {
 
 import type {
   AssetOption,
-} from '../model/types'
+} from '../model/assets'
 
 
 interface AssetSelectorProps {
