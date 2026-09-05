@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    evn: 
+    env: 
       POSTGRES_DB: quant_platform_test
       POSTGRES_USER: quant_app
       POSTGRES_PASSWORD: q123456
