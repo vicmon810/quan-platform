@@ -160,13 +160,13 @@ it('gets portflio values by public id', async() => {
                 publicId: 'test-public-id',
                 values: [
                     {
-                        data:'2020-01-02',
+                        date:'2020-01-02',
                         value:10000,
                         marketExposure:0,
                         drawdown:0,
                     },
                     {
-                        data: '2020-01-03',
+                        date: '2020-01-03',
                         value:10100,
                         marketExposure: 0.95,
                         drawdown: 0.01,
@@ -183,12 +183,12 @@ it('gets portflio values by public id', async() => {
     )
     const result = await getPortfolioValues('test-public-id')
     expect(fetchMock).toHaveBeenCalledWith(
-        '/api/backtest/test-public-id/portfolio-values',
+        '/api/backtests/test-public-id/portfolio-values',
     )
 
     expect(result.values).toHaveLength(2)
     expect(result.values[0]).toEqual({
-        data: '2020-01-02',
+        date: '2020-01-02',
         value:10000,
         marketExposure:0,
         drawdown:0,
