@@ -1,0 +1,30 @@
+name: Bug report / 缺陷报告
+description: Report reproducible incorrect behaviour / 报告可复现的问题
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description / 问题描述
+      description: What happened, and what did you expect? / 实际发生了什么？预期是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction / 复现步骤
+      description: Include the smallest reproducible steps. / 提供最小可复现步骤。
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / 环境
+      description: OS, Python, Java, Node, browser, and relevant versions. / 操作系统及相关版本。
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / 日志
+      description: Remove credentials and sensitive data before pasting logs. / 粘贴前请移除密钥和敏感数据。
+      render: shell

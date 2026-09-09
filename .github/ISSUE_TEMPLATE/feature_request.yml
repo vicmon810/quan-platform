@@ -1,0 +1,24 @@
+name: Feature request / 功能建议
+description: Suggest a focused improvement / 提议一个明确的改进
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / 问题
+      description: What problem should this solve? / 这个功能要解决什么问题？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change / 建议方案
+      description: Describe the smallest useful solution. / 描述最小可用方案。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / 替代方案
+      description: What alternatives have you considered? / 你考虑过哪些替代方案？
